@@ -93,7 +93,7 @@ public class SendingActivity extends ScannerSupportActivity {
     @Override
     public void onScanComplete(String barcode) {
         trxNo=barcode;
-        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV")) {
+        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")) {
             showProgressDialog(true);
             new Thread(() -> {
                 String action = returnMode ? "return" : "sending";

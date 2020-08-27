@@ -144,7 +144,7 @@ public class DeliveryActivity extends ScannerSupportActivity {
     @Override
     public void onScanComplete(String barcode) {
         trxNo=barcode;
-        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV")) {
+        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")) {
             showProgressDialog(true);
             new Thread(() -> {
                 String url = url("logistics", "delivery");
