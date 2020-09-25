@@ -7,7 +7,7 @@ android {
         applicationId "com.example.bmslogistic"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 3
+        versionCode 4
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -44,15 +44,13 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
     implementation files('libs/cw-deviceapi20191022.jar')
-    testImplementation 'junit:junit:4.13'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation('org.springframework.android:spring-android-rest-template:2.0.0.M3')
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.google.android.material:material:1.2.0'
-    implementation 'com.google.android.gms:play-services-vision:20.1.1'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'com.google.android.gms:play-services-vision:20.1.2'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
+    implementation files('libs/platform_sdk_v4.1.0326.jar')
 
 }

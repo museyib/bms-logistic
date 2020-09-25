@@ -1,6 +1,7 @@
 package az.inci.bmslogistic;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
@@ -9,11 +10,11 @@ public class ScanTask extends AsyncTask<String, Integer, Boolean> {
     WeakReference<ScannerSupportActivity> reference;
 
     public ScanTask(ScannerSupportActivity activity) {
-        reference=new WeakReference<>(activity);
+        reference = new WeakReference<>(activity);
     }
 
     public Boolean doInBackground(String... strArr) {
-        ScannerSupportActivity activity=reference.get();
+        ScannerSupportActivity activity = reference.get();
         if (activity.barcode2DWithSoft != null) {
             return activity.barcode2DWithSoft.open(activity);
         }
@@ -23,9 +24,8 @@ public class ScanTask extends AsyncTask<String, Integer, Boolean> {
     public void onPostExecute(Boolean bool) {
         super.onPostExecute(bool);
         if (!bool) {
-            reference.get().showToastMessage("Device not found!");
-        }
-        else {
+            Log.e("SCAN_TASK", "Device not found!");
+        } else {
             reference.get().setScanCallback();
         }
     }

@@ -9,6 +9,8 @@ public class ShipDoc {
     private String sbeCode;
     private String sbeName;
     private String shipStatus;
+    private String driverCode;
+    private String driverName;
 
     public String getDocNo() {
         return docNo;
@@ -68,5 +70,21 @@ public class ShipDoc {
 
     public String getShipStatus() {
         return shipStatus;
+    }
+
+    public String getDriverCode() {
+        return driverCode;
+    }
+
+    public void setDriverCode(String driverCode) {
+        this.driverCode = driverCode;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
     }
 }

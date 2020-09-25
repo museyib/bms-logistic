@@ -16,8 +16,8 @@ import java.util.Map;
 
 public class AppBaseActivity extends AppCompatActivity {
 
-    protected static int SOUND_SUCCESS= R.raw.barcodebeep;
-    protected static int SOUND_FAIL=R.raw.serror3;
+    protected static int SOUND_SUCCESS = R.raw.barcodebeep;
+    protected static int SOUND_FAIL = R.raw.serror3;
 
     protected SoundPool soundPool;
     protected AudioManager audioManager;
@@ -30,16 +30,15 @@ public class AppBaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dbHelper=new DBHelper(this);
+        dbHelper = new DBHelper(this);
         dbHelper.open();
 
-        soundPool =new SoundPool(10, 3, 5);
-        audioManager=(AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        soundPool = new SoundPool(10, 3, 5);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     }
 
-    public void loadFooter()
-    {
-        TextView userId=findViewById(R.id.user_info_id);
+    public void loadFooter() {
+        TextView userId = findViewById(R.id.user_info_id);
         userId.setText(config().getUser().getId());
         userId.append(" - ");
         userId.append(config().getUser().getName());
@@ -61,9 +60,8 @@ public class AppBaseActivity extends AppCompatActivity {
         }
     }
 
-    public String url(String... value)
-    {
-        StringBuilder sb=new StringBuilder();
+    public String url(String... value) {
+        StringBuilder sb = new StringBuilder();
         sb.append(config().getServerUrl());
         for (String s : value) {
             sb.append("/").append(s);
@@ -71,43 +69,37 @@ public class AppBaseActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    public String addRequestParameters(String url, Map<String, String> requestParameters)
-    {
-        StringBuilder builder=new StringBuilder(url);
+    public String addRequestParameters(String url, Map<String, String> requestParameters) {
+        StringBuilder builder = new StringBuilder(url);
         builder.append("?");
 
-        for (Map.Entry<String, String> entry : requestParameters.entrySet())
-        {
+        for (Map.Entry<String, String> entry : requestParameters.entrySet()) {
             builder.append(entry.getKey())
                     .append("=")
                     .append(entry.getValue())
                     .append("&");
         }
 
-        builder.delete(builder.length()-1, builder.length());
+        builder.delete(builder.length() - 1, builder.length());
         return builder.toString();
     }
 
-    public void loadUserInfo(User user, boolean newUser)
-    {
+    public void loadUserInfo(User user, boolean newUser) {
         if (newUser) {
             dbHelper.addUser(user);
         }
         config().setUser(user);
     }
 
-    public AppConfig config()
-    {
+    public AppConfig config() {
         return ((App) getApplication()).getConfig();
     }
 
-    protected void showToastMessage(String message)
-    {
+    protected void showToastMessage(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
-    protected void showMessageDialog(String title, String message, int icon)
-    {
+    protected void showMessageDialog(String title, String message, int icon) {
         new android.app.AlertDialog.Builder(this)
                 .setIcon(icon)
                 .setTitle(title)

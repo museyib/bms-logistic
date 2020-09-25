@@ -161,7 +161,7 @@
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/deliver_person_label"
@@ -173,10 +173,10 @@
                 android:id="@+id/deliver_person"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPersonName"
                 android:autofillHints="@string/deliver_person"
-                android:hint="@string/deliver_person"/>
+                android:ems="10"
+                android:hint="@string/deliver_person"
+                android:inputType="textPersonName" />
         </TableRow>
 
         <TableRow
@@ -207,8 +207,8 @@
         android:layout_height="wrap_content"
         android:text="@string/cancel"
         app:layout_constraintBottom_toTopOf="@+id/footer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/confirm"/>
+        app:layout_constraintEnd_toStartOf="@id/confirm"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/confirm"
@@ -219,8 +219,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/cancel" />
 
-    <include layout="@layout/footer_layout"
+    <include
         android:id="@+id/footer"
+        layout="@layout/footer_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/confirm" />

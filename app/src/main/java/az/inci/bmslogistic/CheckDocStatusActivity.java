@@ -51,8 +51,9 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
 
     @Override
     public void onScanComplete(String barcode) {
-        trxNo=barcode;
-        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV")) {
+        trxNo = barcode;
+        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")
+                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI")) {
             showProgressDialog(true);
             new Thread(() -> {
                 String url = url("logistics", "check-doc-status");
@@ -78,43 +79,38 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
                     runOnUiThread(() -> showProgressDialog(false));
                 }
             }).start();
-        }
-        else
+        } else
             showMessageDialog(getString(R.string.info), getString(R.string.invalid_trx_no),
                     android.R.drawable.ic_dialog_info);
     }
 
-    private void publishResult(String[] result)
-    {
-        String statusText="";
-        if (result!=null)
-        {
+    private void publishResult(String[] result) {
+        String statusText = "";
+        if (result != null) {
             trxNoEdit.setText(trxNo);
             driverCodeEdit.setText(result[0]);
             driverNameEdit.setText(result[1]);
             vehicleCodeEdit.setText(result[2]);
-            noteEdit.setText(result[3].equals("null") ? "" : result[3]+"; "+result[5]);
+            noteEdit.setText(result[3].equals("null") ? "" : result[3] + "; " + result[5]);
 
-            status=result[4];
+            status = result[4];
 
-            switch (status)
-            {
+            switch (status) {
                 case "PL":
-                    statusText=status+": Bir dəfə çıxışa verilib və anbara qayıdıb";
+                    statusText = status + ": Bir dəfə çıxışa verilib və anbara qayıdıb";
                     break;
                 case "AC":
-                    statusText=status+": Anbardan çıxıb";
+                    statusText = status + ": Anbardan çıxıb";
                     break;
                 case "YC":
-                    statusText=status+": Yoldadır";
+                    statusText = status + ": Yoldadır";
                     break;
                 case "MC":
-                    statusText=status+": Müştəriyə çatdırılıb";
+                    statusText = status + ": Müştəriyə çatdırılıb";
                     break;
             }
 
-        }
-        else {
+        } else {
             clearFields();
             statusText = "Sənəd yükləməyə verilməyib";
         }
@@ -122,8 +118,7 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
         statusEdit.setText(statusText);
     }
 
-    private void clearFields()
-    {
+    private void clearFields() {
         trxNoEdit.setText("");
         driverCodeEdit.setText("");
         driverNameEdit.setText("");
@@ -135,9 +130,8 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode!=-1)
-        {
-            if (data!=null) {
+        if (resultCode != -1) {
+            if (data != null) {
                 if (resultCode == 1) {
                     String barcode = data.getStringExtra("barcode");
                     onScanComplete(barcode);

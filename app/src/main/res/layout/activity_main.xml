@@ -27,10 +27,10 @@
             android:layout_height="wrap_content"
             android:drawableStart="@drawable/sending"
             android:gravity="start|center_vertical"
+            android:onClick="openSending"
             android:text="@string/sending"
             android:textAllCaps="false"
-            android:textSize="18sp"
-            android:onClick="openSending"/>
+            android:textSize="18sp" />
 
         <Button
             android:id="@+id/delivery"
@@ -38,10 +38,10 @@
             android:layout_height="wrap_content"
             android:drawableStart="@drawable/delivery"
             android:gravity="start|center_vertical"
+            android:onClick="openDelivery"
             android:text="@string/delivery"
             android:textAllCaps="false"
-            android:textSize="18sp"
-            android:onClick="openDelivery"/>
+            android:textSize="18sp" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

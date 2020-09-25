@@ -49,19 +49,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="3dp"
                     android:text="@string/trx_no"
-                    android:textColor="@android:color/black"  />
-
-                <View
-                    android:layout_width="3dp"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/black" />
-
-                <TextView
-                    android:layout_width="40dp"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="3dp"
-                    android:text="@string/status"
-                    android:textColor="@android:color/black"  />
+                    android:textColor="@android:color/black" />
 
                 <View
                     android:layout_width="3dp"
@@ -73,7 +61,19 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="3dp"
                     android:text="@string/trx_date"
-                    android:textColor="@android:color/black"  />
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black" />
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:text="@string/driver_name"
+                    android:textColor="@android:color/black" />
 
                 <View
                     android:layout_width="3dp"
@@ -85,7 +85,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="3dp"
                     android:text="@string/bp_code"
-                    android:textColor="@android:color/black"  />
+                    android:textColor="@android:color/black" />
 
                 <View
                     android:layout_width="3dp"
@@ -121,18 +121,30 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="3dp"
                     android:text="@string/sbe_name"
-                    android:textColor="@android:color/black"  />
+                    android:textColor="@android:color/black" />
 
                 <View
                     android:layout_width="3dp"
                     android:layout_height="match_parent"
-                    android:background="@android:color/black"/>
+                    android:background="@android:color/black" />
 
                 <TextView
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="3dp"
                     android:text="@string/ship_doc_no"
+                    android:textColor="@android:color/black" />
+
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black" />
+
+                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:text="@string/status"
                     android:textColor="@android:color/black" />
 
                 <View
@@ -147,7 +159,7 @@
                 android:layout_height="wrap_content"
                 android:divider="@android:color/black"
                 android:dividerHeight="2dp"
-                android:paddingBottom="70dp"/>
+                android:paddingBottom="70dp" />
         </LinearLayout>
     </HorizontalScrollView>
 

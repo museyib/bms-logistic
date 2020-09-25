@@ -23,25 +23,28 @@ import java.lang.reflect.Field;
 
 public class BarcodeScannerCamera extends AppBaseActivity {
 
-    private SurfaceView surfaceView;
-    private CameraSource cameraSource;
     private static final int REQUEST_CAMERA_PERMISSION = 1;
-    private SurfaceHolder surfaceHolder;
     Camera camera;
     BarcodeDetector barcodeDetector;
     boolean isContinuous;
+    Camera.AutoFocusCallback myAutoFocusCallback = (arg0, arg1) -> {
+
+    };
+    private SurfaceView surfaceView;
+    private CameraSource cameraSource;
+    private SurfaceHolder surfaceHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_barcode_scanner_camera);
 
-        isContinuous =getIntent().getBooleanExtra("serialScan", false);
+        isContinuous = getIntent().getBooleanExtra("serialScan", false);
 
-        soundPool =new SoundPool(10, 3, 5);
-        audioManager=(AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        soundPool = new SoundPool(10, 3, 5);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         surfaceView = findViewById(R.id.surface_view);
-        surfaceHolder=surfaceView.getHolder();
+        surfaceHolder = surfaceView.getHolder();
 
         surfaceView.setOnClickListener(v -> {
             if (setCamera(cameraSource))
@@ -52,25 +55,22 @@ public class BarcodeScannerCamera extends AppBaseActivity {
     }
 
     public void onScanComplete(String barcode) {
-        Intent intent=new Intent();
+        Intent intent = new Intent();
         intent.putExtra("barcode", barcode);
         setResult(1, intent);
         finish();
     }
 
-    private boolean setCamera(CameraSource cameraSource)
-    {
-        Field[] declaredFields=CameraSource.class.getDeclaredFields();
+    private boolean setCamera(CameraSource cameraSource) {
+        Field[] declaredFields = CameraSource.class.getDeclaredFields();
 
-        for (Field field : declaredFields)
-        {
-            if (field.getType() == Camera.class)
-            {
+        for (Field field : declaredFields) {
+            if (field.getType() == Camera.class) {
                 field.setAccessible(true);
 
                 try {
-                    camera=(Camera)field.get(cameraSource);
-                    if (camera !=null)
+                    camera = (Camera) field.get(cameraSource);
+                    if (camera != null)
                         return true;
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
@@ -144,8 +144,4 @@ public class BarcodeScannerCamera extends AppBaseActivity {
         setResult(-1, new Intent());
         finish();
     }
-
-    Camera.AutoFocusCallback myAutoFocusCallback = (arg0, arg1) -> {
-
-    };
 }

@@ -49,33 +49,33 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doc_list);
 
-        if (docList==null)
+        if (docList == null)
             findViewById(R.id.header).setVisibility(View.GONE);
 
-        refresh=findViewById(R.id.refresh);
-        docListView=findViewById(R.id.doc_list);
+        refresh = findViewById(R.id.refresh);
+        docListView = findViewById(R.id.doc_list);
 
         refresh.setOnClickListener(view -> {
-            View datePicker= LayoutInflater.from(this).inflate(R.layout.date_interval_picker,
+            View datePicker = LayoutInflater.from(this).inflate(R.layout.date_interval_picker,
                     findViewById(android.R.id.content), false);
-            EditText dateFromEdit=datePicker.findViewById(R.id.date_from);
-            EditText dateToEdit=datePicker.findViewById(R.id.date_to);
-            SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            EditText dateFromEdit = datePicker.findViewById(R.id.date_from);
+            EditText dateToEdit = datePicker.findViewById(R.id.date_to);
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-            if (startDate!=null)
+            if (startDate != null)
                 dateFromEdit.setText(startDate);
             else
                 dateFromEdit.setText(format.format(new Date()));
-            if (endDate!=null)
+            if (endDate != null)
                 dateToEdit.setText(endDate);
             else
                 dateToEdit.setText(format.format(new Date()));
 
-            AlertDialog dialog=new AlertDialog.Builder(this)
+            AlertDialog dialog = new AlertDialog.Builder(this)
                     .setView(datePicker)
                     .setPositiveButton("OK", (dialogInterface, i) -> {
-                        startDate=dateFromEdit.getText().toString();
-                        endDate=dateToEdit.getText().toString();
+                        startDate = dateFromEdit.getText().toString();
+                        endDate = dateToEdit.getText().toString();
                         getDocList();
                     })
                     .create();
@@ -105,8 +105,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
             super.onBackPressed();
     }
 
-    private void getDocList()
-    {
+    private void getDocList() {
         showProgressDialog(true);
         new Thread(() -> {
             String url = url("logistics", "doc-list");
@@ -146,22 +145,22 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
     @Override
     public boolean onQueryTextChange(String s) {
-        DocAdapter adapter= (DocAdapter) docListView.getAdapter();
-        if (adapter!=null)
+        DocAdapter adapter = (DocAdapter) docListView.getAdapter();
+        if (adapter != null)
             adapter.getFilter().filter(s);
         return true;
     }
 
-    private static class DocAdapter extends ArrayAdapter<ShipDoc> implements Filterable
-    {
+    private static class DocAdapter extends ArrayAdapter<ShipDoc> implements Filterable {
         List<ShipDoc> docList;
         Context context;
 
         public DocAdapter(@NonNull Context context, int resource, @NonNull List<ShipDoc> objects) {
             super(context, resource, objects);
-            docList=objects;
-            this.context=context;
+            docList = objects;
+            this.context = context;
         }
+
         @Override
         public int getCount() {
             return docList.size();
@@ -170,22 +169,24 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            if (convertView==null)
-                convertView=LayoutInflater.from(context).inflate(R.layout.doc_list_item, parent, false);
+            if (convertView == null)
+                convertView = LayoutInflater.from(context).inflate(R.layout.doc_list_item, parent, false);
 
-            ShipDoc doc=docList.get(position);
-            TextView docNo=convertView.findViewById(R.id.doc_no);
-            TextView trxNo=convertView.findViewById(R.id.trx_no);
-            TextView trxDate=convertView.findViewById(R.id.trx_date);
-            TextView shipStatus=convertView.findViewById(R.id.ship_status);
-            TextView bpCode=convertView.findViewById(R.id.bp_code);
-            TextView bpName=convertView.findViewById(R.id.bp_name);
-            TextView sbeCode=convertView.findViewById(R.id.sbe_code);
-            TextView sbeName=convertView.findViewById(R.id.sbe_name);
+            ShipDoc doc = docList.get(position);
+            TextView docNo = convertView.findViewById(R.id.doc_no);
+            TextView trxNo = convertView.findViewById(R.id.trx_no);
+            TextView trxDate = convertView.findViewById(R.id.trx_date);
+            TextView driverName = convertView.findViewById(R.id.driver_name);
+            TextView shipStatus = convertView.findViewById(R.id.ship_status);
+            TextView bpCode = convertView.findViewById(R.id.bp_code);
+            TextView bpName = convertView.findViewById(R.id.bp_name);
+            TextView sbeCode = convertView.findViewById(R.id.sbe_code);
+            TextView sbeName = convertView.findViewById(R.id.sbe_name);
 
             docNo.setText(doc.getDocNo());
             trxNo.setText(doc.getTrxNo());
             trxDate.setText(doc.getTrxDate());
+            driverName.setText(doc.getDriverName());
             shipStatus.setText(doc.getShipStatus());
             bpCode.setText(doc.getBpCode());
             bpName.setText(doc.getBpName());
@@ -199,33 +200,31 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         @Override
         public Filter getFilter() {
             return new Filter() {
-                private DocListActivity activity= (DocListActivity) context;
+                private DocListActivity activity = (DocListActivity) context;
 
                 @Override
                 protected FilterResults performFiltering(CharSequence constraint) {
                     FilterResults results = new FilterResults();
-                    List<ShipDoc> filteredArrayData=new ArrayList<>();
-                    constraint=constraint.toString().toLowerCase();
+                    List<ShipDoc> filteredArrayData = new ArrayList<>();
+                    constraint = constraint.toString().toLowerCase();
 
-                    for (ShipDoc doc: activity.docList)
-                    {
+                    for (ShipDoc doc : activity.docList) {
                         if (doc.getTrxNo().concat(doc.getTrxNo()).concat(doc.getBpName())
                                 .concat(doc.getSbeName().concat(doc.getSbeCode()))
-                            .toLowerCase().contains(constraint))
-                        {
+                                .concat(doc.getDriverName()).toLowerCase().contains(constraint)) {
                             filteredArrayData.add(doc);
                         }
                     }
 
-                    results.count=filteredArrayData.size();
-                    results.values=filteredArrayData;
+                    results.count = filteredArrayData.size();
+                    results.values = filteredArrayData;
                     return results;
                 }
 
                 @SuppressWarnings("unchecked")
                 @Override
                 protected void publishResults(CharSequence constraint, FilterResults results) {
-                    docList= (List<ShipDoc>) results.values;
+                    docList = (List<ShipDoc>) results.values;
                     notifyDataSetChanged();
                 }
             };

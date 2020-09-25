@@ -8,12 +8,12 @@
         android:id="@+id/id_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:autofillHints="Username"
         android:ems="10"
+        android:hint="@string/user_id"
         android:inputType="textPersonName"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:autofillHints="Username"
-        android:hint="@string/user_id">
+        app:layout_constraintTop_toTopOf="parent">
 
         <requestFocus />
     </EditText>
@@ -22,10 +22,10 @@
         android:id="@+id/password_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:autofillHints="Password"
         android:ems="10"
+        android:hint="@string/password"
         android:inputType="textPassword"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/id_edit"
-        android:autofillHints="Password"
-        android:hint="@string/password" />
+        app:layout_constraintTop_toBottomOf="@+id/id_edit" />
 </androidx.constraintlayout.widget.ConstraintLayout>

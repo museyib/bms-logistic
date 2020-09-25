@@ -9,18 +9,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:ems="10"
-        android:inputType="date"
         android:autofillHints="@string/from_date"
-        android:hint="@string/from_date"/>
+        android:ems="10"
+        android:hint="@string/from_date"
+        android:inputType="date" />
 
     <EditText
         android:id="@+id/date_to"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:ems="10"
-        android:inputType="date"
         android:autofillHints="@string/to_date"
-        android:hint="@string/to_date"/>
+        android:ems="10"
+        android:hint="@string/to_date"
+        android:inputType="date" />
 </LinearLayout>

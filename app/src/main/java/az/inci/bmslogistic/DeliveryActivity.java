@@ -61,9 +61,9 @@ public class DeliveryActivity extends ScannerSupportActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delivery);
 
-        scanCam=findViewById(R.id.scan_cam);
-        confirm=findViewById(R.id.confirm);
-        cancel=findViewById(R.id.cancel);
+        scanCam = findViewById(R.id.scan_cam);
+        confirm = findViewById(R.id.confirm);
+        cancel = findViewById(R.id.cancel);
 
         trxNoEdit = findViewById(R.id.trx_no);
         driverCodeEdit = findViewById(R.id.driver_code);
@@ -76,16 +76,15 @@ public class DeliveryActivity extends ScannerSupportActivity {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        locationCallback=new LocationCallback(){
+        locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (locationResult==null)
+                if (locationResult == null)
                     return;
 
-                for (Location location : locationResult.getLocations())
-                {
-                    currentLongitude =location.getLongitude();
-                    currentLatitude =location.getLatitude();
+                for (Location location : locationResult.getLocations()) {
+                    currentLongitude = location.getLongitude();
+                    currentLatitude = location.getLatitude();
                 }
             }
         };
@@ -105,12 +104,12 @@ public class DeliveryActivity extends ScannerSupportActivity {
         });
 
         confirm.setOnClickListener(view -> {
-            Point currentPoint=new Point(currentLongitude, currentLatitude);
-            Point targetPoint=new Point(targetLongitude, targetLatitude);
+            Point currentPoint = new Point(currentLongitude, currentLatitude);
+            Point targetPoint = new Point(targetLongitude, targetLatitude);
 
-            if (currentPoint.getDistance(targetPoint)<=100) {
+            if (currentPoint.getDistance(targetPoint) <= 100) {
 
-                AlertDialog dialog=new AlertDialog.Builder(this)
+                AlertDialog dialog = new AlertDialog.Builder(this)
                         .setMessage("Təsdiqləmək istəyirsinizmi?")
                         .setCancelable(false)
                         .setPositiveButton("Bəli", (dialogInterface, i) -> {
@@ -121,9 +120,7 @@ public class DeliveryActivity extends ScannerSupportActivity {
                         .setNegativeButton("Xeyr", null)
                         .create();
                 dialog.show();
-            }
-            else
-            {
+            } else {
                 showMessageDialog(getString(R.string.info),
                         "Hədəf nöqtəsinə kifayət qədər yaxın deyilsiniz.",
                         android.R.drawable.ic_dialog_info);
@@ -133,8 +130,7 @@ public class DeliveryActivity extends ScannerSupportActivity {
         loadFooter();
     }
 
-    private void changeFillingStatus()
-    {
+    private void changeFillingStatus() {
         confirm.setEnabled(filled);
         cancel.setEnabled(filled);
         noteEdit.setEnabled(filled);
@@ -143,8 +139,9 @@ public class DeliveryActivity extends ScannerSupportActivity {
 
     @Override
     public void onScanComplete(String barcode) {
-        trxNo=barcode;
-        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")) {
+        trxNo = barcode;
+        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")
+                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI")) {
             showProgressDialog(true);
             new Thread(() -> {
                 String url = url("logistics", "delivery");
@@ -170,49 +167,48 @@ public class DeliveryActivity extends ScannerSupportActivity {
                     runOnUiThread(() -> showProgressDialog(false));
                 }
             }).start();
-        }
-        else
+        } else
             showMessageDialog(getString(R.string.info), getString(R.string.invalid_trx_no),
                     android.R.drawable.ic_dialog_info);
     }
 
-    private void publishResult(String[] result)
-    {
-        if (result!=null)
-        {
+    private void publishResult(String[] result) {
+        if (result != null) {
             trxNoEdit.setText(trxNo);
             driverCodeEdit.setText(result[0]);
             driverNameEdit.setText(result[1]);
             vehicleCodeEdit.setText(result[2]);
 
-            note=result[3];
-            if (!note.isEmpty())
-            {
+            note = result[3];
+            if (!note.isEmpty()) {
                 String[] split = note.split("; ");
-                if (split.length>1) {
+                if (split.length > 1) {
                     String[] split1 = split[1].split(": ");
-                    if (split1.length>1)
-                        note=split1[1];
+                    if (split1.length > 1)
+                        note = split1[1];
                     else
                         note = "";
-                }
-                else
+                } else
                     note = "";
             }
             noteEdit.setText(note.equals("null") ? "" : note);
 
             String targetCode = result[5];
             String targetName = result[6];
-            targetLongitude=Double.parseDouble(result[7]);
-            targetLatitude=Double.parseDouble(result[8]);
-
             targetCodeEdit.setText(targetCode);
             targetNameEdit.setText(targetName);
-            filled=true;
+            if (result[7].isEmpty() || result[8].isEmpty()) {
+                showMessageDialog(getString(R.string.info),
+                        getString(R.string.not_found_location_for_target),
+                        android.R.drawable.ic_dialog_info);
+                return;
+            } else {
+                targetLongitude = Double.parseDouble(result[7]);
+                targetLatitude = Double.parseDouble(result[8]);
+            }
+            filled = true;
             changeFillingStatus();
-        }
-        else
-        {
+        } else {
             clearFields();
             changeFillingStatus();
             showMessageDialog(getString(R.string.info),
@@ -221,9 +217,8 @@ public class DeliveryActivity extends ScannerSupportActivity {
         }
     }
 
-    private void clearFields()
-    {
-        filled=false;
+    private void clearFields() {
+        filled = false;
         trxNoEdit.setText("");
         driverCodeEdit.setText("");
         driverNameEdit.setText("");
@@ -234,18 +229,15 @@ public class DeliveryActivity extends ScannerSupportActivity {
         deliverPersonEdit.setText("");
     }
 
-    private void getLocationUpdates()
-    {
+    private void getLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            && ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
+                && ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-        }
-        else
+        } else
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
@@ -257,58 +249,52 @@ public class DeliveryActivity extends ScannerSupportActivity {
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void changeDocStatus()
-    {
+    private void changeDocStatus() {
         showProgressDialog(true);
         new Thread(() -> {
-            note="İstifadəçi: "+config().getUser().getId();
+            note = "İstifadəçi: " + config().getUser().getId();
             if (!noteEdit.getText().toString().isEmpty())
-                note+="; Qeyd: "+noteEdit.getText().toString();
-            deliverPerson=deliverPersonEdit.getText().toString();
+                note += "; Qeyd: " + noteEdit.getText().toString();
+            deliverPerson = deliverPersonEdit.getText().toString();
 
-            String url=url("logistics", "change-doc-status");
-            Map<String, String> parameters=new HashMap<>();
+            String url = url("logistics", "change-doc-status");
+            Map<String, String> parameters = new HashMap<>();
             parameters.put("trx-no", trxNo);
             parameters.put("status", "MC");
             parameters.put("note", note);
             parameters.put("deliver-person", deliverPerson);
-            url=addRequestParameters(url, parameters);
+            url = addRequestParameters(url, parameters);
 
-            RestTemplate template=new RestTemplate();
-            ((SimpleClientHttpRequestFactory)template.getRequestFactory())
-                    .setConnectTimeout(config().getConnectionTimeout()*1000);
+            RestTemplate template = new RestTemplate();
+            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
+                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
             template.getMessageConverters().add(new StringHttpMessageConverter());
             boolean result;
             try {
-                result = template.postForObject(url, null,  Boolean.class);
+                result = template.postForObject(url, null, Boolean.class);
                 runOnUiThread(() -> onPostExecute(result));
-            }
-            catch (RuntimeException ex)
-            {
+            } catch (RuntimeException ex) {
                 ex.printStackTrace();
                 showMessageDialog(getString(R.string.error), getString(R.string.connection_error),
                         android.R.drawable.ic_dialog_alert);
-            }
-            finally {
+            } finally {
                 runOnUiThread(() -> showProgressDialog(false));
             }
         }).start();
     }
 
-    private void onPostExecute(boolean result)
-    {
+    private void onPostExecute(boolean result) {
         String message;
         String title;
         int icon;
         if (result) {
-            title=getString(R.string.info);
+            title = getString(R.string.info);
             message = getString(R.string.doc_confirmed_successfully);
-            icon=android.R.drawable.ic_dialog_info;
-        }
-        else {
-            title=getString(R.string.error);
+            icon = android.R.drawable.ic_dialog_info;
+        } else {
+            title = getString(R.string.error);
             message = getString(R.string.server_error);
-            icon=android.R.drawable.ic_dialog_alert;
+            icon = android.R.drawable.ic_dialog_alert;
         }
         showMessageDialog(title, message, icon);
     }
@@ -317,11 +303,9 @@ public class DeliveryActivity extends ScannerSupportActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode!=-1)
-        {
-            if (data!=null)
-            {
-                String barcode=data.getStringExtra("barcode");
+        if (resultCode != -1) {
+            if (data != null) {
+                String barcode = data.getStringExtra("barcode");
                 onScanComplete(barcode);
             }
         }
@@ -330,16 +314,16 @@ public class DeliveryActivity extends ScannerSupportActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        MenuItem itemSearch=menu.findItem(R.id.check_doc_status);
+        MenuItem itemSearch = menu.findItem(R.id.check_doc_status);
         itemSearch.setOnMenuItemClickListener(menuItem -> {
-            Intent intent=new Intent(this, CheckDocStatusActivity.class);
+            Intent intent = new Intent(this, CheckDocStatusActivity.class);
             startActivity(intent);
             return true;
         });
 
-        MenuItem itemList=menu.findItem(R.id.list);
+        MenuItem itemList = menu.findItem(R.id.list);
         itemList.setOnMenuItemClickListener(menuItem -> {
-            Intent intent=new Intent(this, DocListActivity.class);
+            Intent intent = new Intent(this, DocListActivity.class);
             startActivity(intent);
             return true;
         });

@@ -46,4 +46,5 @@
     <string name="sbe_name">Təmsilçi adı</string>
     <string name="trx_date">Tarix</string>
     <string name="ship_doc_no">Yükləmə sənədi</string>
+    <string name="not_found_location_for_target">Hədəf üçün koordinat tapılmadı</string>
 </resources>

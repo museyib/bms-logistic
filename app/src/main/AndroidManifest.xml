@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -31,14 +32,30 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
-        <activity android:name=".DocListActivity"
-            android:label="Yükləmə siyahısı"/>
-        <activity android:name=".CheckDocStatusActivity"
-            android:label="Sənədin yoxlanması"/>
-        <activity android:name=".DeliveryActivity"
-            android:label="Çatdırılma"/>
-        <activity android:name=".SendingActivity"
-            android:label="Yola salma"/>
+
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+        <activity
+            android:name=".DocListActivity"
+            android:label="Yükləmə siyahısı" />
+        <activity
+            android:name=".CheckDocStatusActivity"
+            android:label="Sənədin yoxlanması" />
+        <activity
+            android:name=".DeliveryActivity"
+            android:label="Çatdırılma" />
+        <activity
+            android:name=".SendingActivity"
+            android:label="Yola salma" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,10 +63,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingsActivity"
-            android:label="Konfiqurasiya"/>
-        <activity android:name=".BarcodeScannerCamera"
-            android:label="Kamera skaner"/>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Konfiqurasiya" />
+        <activity
+            android:name=".BarcodeScannerCamera"
+            android:label="Kamera skaner" />
     </application>
 
 </manifest>

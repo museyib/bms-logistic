@@ -154,9 +154,9 @@
                 android:layout_weight="1"
                 android:autofillHints="@string/note"
                 android:ems="10"
+                android:enabled="false"
                 android:hint="@string/note"
                 android:inputType="textMultiLine"
-                android:enabled="false"
                 android:textColor="@android:color/black" />
         </TableRow>
 
