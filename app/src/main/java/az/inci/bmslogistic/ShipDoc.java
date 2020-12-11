@@ -1,6 +1,7 @@
 package az.inci.bmslogistic;
 
-public class ShipDoc {
+public class ShipDoc
+{
     private String docNo;
     private String trxNo;
     private String trxDate;
@@ -12,79 +13,98 @@ public class ShipDoc {
     private String driverCode;
     private String driverName;
 
-    public String getDocNo() {
+    public String getDocNo()
+    {
         return docNo;
     }
 
-    public void setDocNo(String docNo) {
+    public void setDocNo(String docNo)
+    {
         this.docNo = docNo;
     }
 
-    public String getTrxNo() {
+    public String getTrxNo()
+    {
         return trxNo;
     }
 
-    public void setTrxNo(String trxNo) {
+    public void setTrxNo(String trxNo)
+    {
         this.trxNo = trxNo;
     }
 
-    public String getTrxDate() {
+    public String getTrxDate()
+    {
         return trxDate;
     }
 
-    public void setTrxDate(String trxDate) {
+    public void setTrxDate(String trxDate)
+    {
         this.trxDate = trxDate;
     }
 
-    public String getBpCode() {
+    public String getBpCode()
+    {
         return bpCode;
     }
 
-    public void setBpCode(String bpCode) {
+    public void setBpCode(String bpCode)
+    {
         this.bpCode = bpCode;
     }
 
-    public String getBpName() {
+    public String getBpName()
+    {
         return bpName;
     }
 
-    public void setBpName(String bpName) {
+    public void setBpName(String bpName)
+    {
         this.bpName = bpName;
     }
 
-    public String getSbeCode() {
+    public String getSbeCode()
+    {
         return sbeCode;
     }
 
-    public void setSbeCode(String sbeCode) {
+    public void setSbeCode(String sbeCode)
+    {
         this.sbeCode = sbeCode;
     }
 
-    public String getSbeName() {
+    public String getSbeName()
+    {
         return sbeName;
     }
 
-    public void setSbeName(String sbeName) {
+    public void setSbeName(String sbeName)
+    {
         this.sbeName = sbeName;
     }
 
-    public String getShipStatus() {
+    public String getShipStatus()
+    {
         return shipStatus;
     }
 
-    public String getDriverCode() {
+    public String getDriverCode()
+    {
         return driverCode;
     }
 
-    public void setDriverCode(String driverCode) {
+    public void setDriverCode(String driverCode)
+    {
         this.driverCode = driverCode;
     }
 
-    public String getDriverName() {
+    public String getDriverName()
+    {
         return driverName;
     }
 
-    public void setDriverName(String driverName) {
+    public void setDriverName(String driverName)
+    {
         this.driverName = driverName;
     }
 }

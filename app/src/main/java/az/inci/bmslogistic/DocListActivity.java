@@ -33,7 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class DocListActivity extends AppBaseActivity implements SearchView.OnQueryTextListener {
+public class DocListActivity extends AppBaseActivity implements SearchView.OnQueryTextListener
+{
 
     SearchView searchView;
 
@@ -45,7 +46,8 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     String endDate;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doc_list);
 
@@ -55,7 +57,8 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         refresh = findViewById(R.id.refresh);
         docListView = findViewById(R.id.doc_list);
 
-        refresh.setOnClickListener(view -> {
+        refresh.setOnClickListener(view ->
+        {
             View datePicker = LayoutInflater.from(this).inflate(R.layout.date_interval_picker,
                     findViewById(android.R.id.content), false);
             EditText dateFromEdit = datePicker.findViewById(R.id.date_from);
@@ -73,7 +76,8 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
             AlertDialog dialog = new AlertDialog.Builder(this)
                     .setView(datePicker)
-                    .setPositiveButton("OK", (dialogInterface, i) -> {
+                    .setPositiveButton("OK", (dialogInterface, i) ->
+                    {
                         startDate = dateFromEdit.getText().toString();
                         endDate = dateToEdit.getText().toString();
                         getDocList();
@@ -87,7 +91,8 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.search_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.search);
@@ -98,16 +103,19 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
         if (!searchView.isIconified())
             searchView.setIconified(true);
         else
             super.onBackPressed();
     }
 
-    private void getDocList() {
+    private void getDocList()
+    {
         showProgressDialog(true);
-        new Thread(() -> {
+        new Thread(() ->
+        {
             String url = url("logistics", "doc-list");
             Map<String, String> parameters = new HashMap<>();
             parameters.put("start-date", startDate);
@@ -117,58 +125,70 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
             ((SimpleClientHttpRequestFactory) template.getRequestFactory())
                     .setConnectTimeout(config().getConnectionTimeout() * 1000);
             template.getMessageConverters().add(new StringHttpMessageConverter());
-            try {
+            try
+            {
                 docList = Arrays.asList(template.getForObject(url, ShipDoc[].class));
                 runOnUiThread(this::publishResult);
-            } catch (RuntimeException ex) {
+            }
+            catch (RuntimeException ex)
+            {
                 ex.printStackTrace();
                 runOnUiThread(() ->
                         showMessageDialog(getString(R.string.error),
                                 getString(R.string.connection_error),
                                 android.R.drawable.ic_dialog_alert)
                 );
-            } finally {
+            }
+            finally
+            {
                 runOnUiThread(() -> showProgressDialog(false));
             }
         }).start();
     }
 
-    private void publishResult() {
+    private void publishResult()
+    {
         findViewById(R.id.header).setVisibility(View.VISIBLE);
         docListView.setAdapter(new DocAdapter(this, R.id.doc_list, docList));
     }
 
     @Override
-    public boolean onQueryTextSubmit(String s) {
+    public boolean onQueryTextSubmit(String s)
+    {
         return false;
     }
 
     @Override
-    public boolean onQueryTextChange(String s) {
+    public boolean onQueryTextChange(String s)
+    {
         DocAdapter adapter = (DocAdapter) docListView.getAdapter();
         if (adapter != null)
             adapter.getFilter().filter(s);
         return true;
     }
 
-    private static class DocAdapter extends ArrayAdapter<ShipDoc> implements Filterable {
+    private static class DocAdapter extends ArrayAdapter<ShipDoc> implements Filterable
+    {
         List<ShipDoc> docList;
         Context context;
 
-        public DocAdapter(@NonNull Context context, int resource, @NonNull List<ShipDoc> objects) {
+        public DocAdapter(@NonNull Context context, int resource, @NonNull List<ShipDoc> objects)
+        {
             super(context, resource, objects);
             docList = objects;
             this.context = context;
         }
 
         @Override
-        public int getCount() {
+        public int getCount()
+        {
             return docList.size();
         }
 
         @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+        {
             if (convertView == null)
                 convertView = LayoutInflater.from(context).inflate(R.layout.doc_list_item, parent, false);
 
@@ -198,20 +218,25 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
         @NonNull
         @Override
-        public Filter getFilter() {
-            return new Filter() {
+        public Filter getFilter()
+        {
+            return new Filter()
+            {
                 private DocListActivity activity = (DocListActivity) context;
 
                 @Override
-                protected FilterResults performFiltering(CharSequence constraint) {
+                protected FilterResults performFiltering(CharSequence constraint)
+                {
                     FilterResults results = new FilterResults();
                     List<ShipDoc> filteredArrayData = new ArrayList<>();
                     constraint = constraint.toString().toLowerCase();
 
-                    for (ShipDoc doc : activity.docList) {
+                    for (ShipDoc doc : activity.docList)
+                    {
                         if (doc.getTrxNo().concat(doc.getTrxNo()).concat(doc.getBpName())
                                 .concat(doc.getSbeName().concat(doc.getSbeCode()))
-                                .concat(doc.getDriverName()).toLowerCase().contains(constraint)) {
+                                .concat(doc.getDriverName()).toLowerCase().contains(constraint))
+                        {
                             filteredArrayData.add(doc);
                         }
                     }
@@ -223,7 +248,8 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
                 @SuppressWarnings("unchecked")
                 @Override
-                protected void publishResults(CharSequence constraint, FilterResults results) {
+                protected void publishResults(CharSequence constraint, FilterResults results)
+                {
                     docList = (List<ShipDoc>) results.values;
                     notifyDataSetChanged();
                 }

@@ -47,4 +47,6 @@
     <string name="trx_date">Tarix</string>
     <string name="ship_doc_no">Yükləmə sənədi</string>
     <string name="not_found_location_for_target">Hədəf üçün koordinat tapılmadı</string>
+    <string name="from_server">Serverdən</string>
+    <string name="error_occurred">Xəta baş verdi!</string>
 </resources>

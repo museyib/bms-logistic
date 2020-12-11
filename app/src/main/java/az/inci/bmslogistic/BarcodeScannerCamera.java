@@ -21,13 +21,15 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.lang.reflect.Field;
 
-public class BarcodeScannerCamera extends AppBaseActivity {
+public class BarcodeScannerCamera extends AppBaseActivity
+{
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     Camera camera;
     BarcodeDetector barcodeDetector;
     boolean isContinuous;
-    Camera.AutoFocusCallback myAutoFocusCallback = (arg0, arg1) -> {
+    Camera.AutoFocusCallback myAutoFocusCallback = (arg0, arg1) ->
+    {
 
     };
     private SurfaceView surfaceView;
@@ -35,7 +37,8 @@ public class BarcodeScannerCamera extends AppBaseActivity {
     private SurfaceHolder surfaceHolder;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_barcode_scanner_camera);
 
@@ -46,7 +49,8 @@ public class BarcodeScannerCamera extends AppBaseActivity {
         surfaceView = findViewById(R.id.surface_view);
         surfaceHolder = surfaceView.getHolder();
 
-        surfaceView.setOnClickListener(v -> {
+        surfaceView.setOnClickListener(v ->
+        {
             if (setCamera(cameraSource))
                 camera.autoFocus(myAutoFocusCallback);
         });
@@ -54,25 +58,32 @@ public class BarcodeScannerCamera extends AppBaseActivity {
         initialiseDetectorsAndSources();
     }
 
-    public void onScanComplete(String barcode) {
+    public void onScanComplete(String barcode)
+    {
         Intent intent = new Intent();
         intent.putExtra("barcode", barcode);
         setResult(1, intent);
         finish();
     }
 
-    private boolean setCamera(CameraSource cameraSource) {
+    private boolean setCamera(CameraSource cameraSource)
+    {
         Field[] declaredFields = CameraSource.class.getDeclaredFields();
 
-        for (Field field : declaredFields) {
-            if (field.getType() == Camera.class) {
+        for (Field field : declaredFields)
+        {
+            if (field.getType() == Camera.class)
+            {
                 field.setAccessible(true);
 
-                try {
+                try
+                {
                     camera = (Camera) field.get(cameraSource);
                     if (camera != null)
                         return true;
-                } catch (IllegalAccessException e) {
+                }
+                catch (IllegalAccessException e)
+                {
                     e.printStackTrace();
                 }
             }
@@ -81,7 +92,8 @@ public class BarcodeScannerCamera extends AppBaseActivity {
         return false;
     }
 
-    private void initialiseDetectorsAndSources() {
+    private void initialiseDetectorsAndSources()
+    {
 
         barcodeDetector = new BarcodeDetector.Builder(this)
                 .setBarcodeFormats(Barcode.ALL_FORMATS)
@@ -93,45 +105,59 @@ public class BarcodeScannerCamera extends AppBaseActivity {
                 .build();
 
 
-        surfaceHolder.addCallback(new SurfaceHolder.Callback() {
+        surfaceHolder.addCallback(new SurfaceHolder.Callback()
+        {
             @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                try {
+            public void surfaceCreated(SurfaceHolder holder)
+            {
+                try
+                {
                     if (ActivityCompat.checkSelfPermission(BarcodeScannerCamera.this,
-                            Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
+                    {
                         cameraSource.start(surfaceView.getHolder());
-                    } else {
+                    }
+                    else
+                    {
                         ActivityCompat.requestPermissions(BarcodeScannerCamera.this, new
                                 String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
                     }
 
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     e.printStackTrace();
                 }
 
             }
 
             @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
+            {
 
             }
 
             @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
+            public void surfaceDestroyed(SurfaceHolder holder)
+            {
                 cameraSource.stop();
             }
         });
 
 
-        barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
+        barcodeDetector.setProcessor(new Detector.Processor<Barcode>()
+        {
             @Override
-            public void release() {
+            public void release()
+            {
             }
 
             @Override
-            public void receiveDetections(Detector.Detections<Barcode> detections) {
+            public void receiveDetections(Detector.Detections<Barcode> detections)
+            {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
-                if (barcodes.size() != 0) {
+                if (barcodes.size() != 0)
+                {
                     String barcode = barcodes.valueAt(0).displayValue;
                     onScanComplete(barcode);
                 }
@@ -140,7 +166,8 @@ public class BarcodeScannerCamera extends AppBaseActivity {
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
         setResult(-1, new Intent());
         finish();
     }

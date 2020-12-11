@@ -28,7 +28,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DeliveryActivity extends ScannerSupportActivity {
+public class DeliveryActivity extends ScannerSupportActivity
+{
 
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationCallback locationCallback;
@@ -57,7 +58,8 @@ public class DeliveryActivity extends ScannerSupportActivity {
     private double currentLatitude;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delivery);
 
@@ -76,13 +78,16 @@ public class DeliveryActivity extends ScannerSupportActivity {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        locationCallback = new LocationCallback() {
+        locationCallback = new LocationCallback()
+        {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
+            public void onLocationResult(LocationResult locationResult)
+            {
                 if (locationResult == null)
                     return;
 
-                for (Location location : locationResult.getLocations()) {
+                for (Location location : locationResult.getLocations())
+                {
                     currentLongitude = location.getLongitude();
                     currentLatitude = location.getLatitude();
                 }
@@ -98,21 +103,25 @@ public class DeliveryActivity extends ScannerSupportActivity {
         scanCam.setOnClickListener(view -> startActivityForResult(new Intent(
                 this, BarcodeScannerCamera.class), 1));
 
-        cancel.setOnClickListener(view -> {
+        cancel.setOnClickListener(view ->
+        {
             clearFields();
             changeFillingStatus();
         });
 
-        confirm.setOnClickListener(view -> {
+        confirm.setOnClickListener(view ->
+        {
             Point currentPoint = new Point(currentLongitude, currentLatitude);
             Point targetPoint = new Point(targetLongitude, targetLatitude);
 
-            if (currentPoint.getDistance(targetPoint) <= 100) {
+            if (currentPoint.getDistance(targetPoint) <= 100)
+            {
 
                 AlertDialog dialog = new AlertDialog.Builder(this)
                         .setMessage("Təsdiqləmək istəyirsinizmi?")
                         .setCancelable(false)
-                        .setPositiveButton("Bəli", (dialogInterface, i) -> {
+                        .setPositiveButton("Bəli", (dialogInterface, i) ->
+                        {
                             changeDocStatus();
                             clearFields();
                             changeFillingStatus();
@@ -120,7 +129,9 @@ public class DeliveryActivity extends ScannerSupportActivity {
                         .setNegativeButton("Xeyr", null)
                         .create();
                 dialog.show();
-            } else {
+            }
+            else
+            {
                 showMessageDialog(getString(R.string.info),
                         "Hədəf nöqtəsinə kifayət qədər yaxın deyilsiniz.",
                         android.R.drawable.ic_dialog_info);
@@ -128,9 +139,13 @@ public class DeliveryActivity extends ScannerSupportActivity {
         });
 
         loadFooter();
+
+        Intent intent = new Intent(this, LocationService.class);
+        startService(intent);
     }
 
-    private void changeFillingStatus() {
+    private void changeFillingStatus()
+    {
         confirm.setEnabled(filled);
         cancel.setEnabled(filled);
         noteEdit.setEnabled(filled);
@@ -138,12 +153,15 @@ public class DeliveryActivity extends ScannerSupportActivity {
     }
 
     @Override
-    public void onScanComplete(String barcode) {
+    public void onScanComplete(String barcode)
+    {
         trxNo = barcode;
         if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")
-                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI")) {
+                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI"))
+        {
             showProgressDialog(true);
-            new Thread(() -> {
+            new Thread(() ->
+            {
                 String url = url("logistics", "delivery");
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("trx-no", barcode);
@@ -153,42 +171,53 @@ public class DeliveryActivity extends ScannerSupportActivity {
                         .setConnectTimeout(config().getConnectionTimeout() * 1000);
                 template.getMessageConverters().add(new StringHttpMessageConverter());
                 String[] result;
-                try {
+                try
+                {
                     result = template.getForObject(url, String[].class);
                     runOnUiThread(() -> publishResult(result));
-                } catch (RuntimeException ex) {
+                }
+                catch (RuntimeException ex)
+                {
                     ex.printStackTrace();
                     runOnUiThread(() ->
                             showMessageDialog(getString(R.string.error),
                                     getString(R.string.connection_error),
                                     android.R.drawable.ic_dialog_alert)
                     );
-                } finally {
+                }
+                finally
+                {
                     runOnUiThread(() -> showProgressDialog(false));
                 }
             }).start();
-        } else
+        }
+        else
             showMessageDialog(getString(R.string.info), getString(R.string.invalid_trx_no),
                     android.R.drawable.ic_dialog_info);
     }
 
-    private void publishResult(String[] result) {
-        if (result != null) {
+    private void publishResult(String[] result)
+    {
+        if (result != null)
+        {
             trxNoEdit.setText(trxNo);
             driverCodeEdit.setText(result[0]);
             driverNameEdit.setText(result[1]);
             vehicleCodeEdit.setText(result[2]);
 
             note = result[3];
-            if (!note.isEmpty()) {
+            if (!note.isEmpty())
+            {
                 String[] split = note.split("; ");
-                if (split.length > 1) {
+                if (split.length > 1)
+                {
                     String[] split1 = split[1].split(": ");
                     if (split1.length > 1)
                         note = split1[1];
                     else
                         note = "";
-                } else
+                }
+                else
                     note = "";
             }
             noteEdit.setText(note.equals("null") ? "" : note);
@@ -197,18 +226,23 @@ public class DeliveryActivity extends ScannerSupportActivity {
             String targetName = result[6];
             targetCodeEdit.setText(targetCode);
             targetNameEdit.setText(targetName);
-            if (result[7].isEmpty() || result[8].isEmpty()) {
+            if (result[7].isEmpty() || result[8].isEmpty())
+            {
                 showMessageDialog(getString(R.string.info),
                         getString(R.string.not_found_location_for_target),
                         android.R.drawable.ic_dialog_info);
                 return;
-            } else {
+            }
+            else
+            {
                 targetLongitude = Double.parseDouble(result[7]);
                 targetLatitude = Double.parseDouble(result[8]);
             }
             filled = true;
             changeFillingStatus();
-        } else {
+        }
+        else
+        {
             clearFields();
             changeFillingStatus();
             showMessageDialog(getString(R.string.info),
@@ -217,7 +251,8 @@ public class DeliveryActivity extends ScannerSupportActivity {
         }
     }
 
-    private void clearFields() {
+    private void clearFields()
+    {
         filled = false;
         trxNoEdit.setText("");
         driverCodeEdit.setText("");
@@ -229,29 +264,35 @@ public class DeliveryActivity extends ScannerSupportActivity {
         deliverPersonEdit.setText("");
     }
 
-    private void getLocationUpdates() {
+    private void getLocationUpdates()
+    {
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-        } else
+        }
+        else
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
 
-    protected void createLocationRequest() {
+    protected void createLocationRequest()
+    {
         locationRequest = LocationRequest.create();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(500);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void changeDocStatus() {
+    private void changeDocStatus()
+    {
         showProgressDialog(true);
-        new Thread(() -> {
+        new Thread(() ->
+        {
             note = "İstifadəçi: " + config().getUser().getId();
             if (!noteEdit.getText().toString().isEmpty())
                 note += "; Qeyd: " + noteEdit.getText().toString();
@@ -270,28 +311,37 @@ public class DeliveryActivity extends ScannerSupportActivity {
                     .setConnectTimeout(config().getConnectionTimeout() * 1000);
             template.getMessageConverters().add(new StringHttpMessageConverter());
             boolean result;
-            try {
+            try
+            {
                 result = template.postForObject(url, null, Boolean.class);
                 runOnUiThread(() -> onPostExecute(result));
-            } catch (RuntimeException ex) {
+            }
+            catch (RuntimeException ex)
+            {
                 ex.printStackTrace();
                 showMessageDialog(getString(R.string.error), getString(R.string.connection_error),
                         android.R.drawable.ic_dialog_alert);
-            } finally {
+            }
+            finally
+            {
                 runOnUiThread(() -> showProgressDialog(false));
             }
         }).start();
     }
 
-    private void onPostExecute(boolean result) {
+    private void onPostExecute(boolean result)
+    {
         String message;
         String title;
         int icon;
-        if (result) {
+        if (result)
+        {
             title = getString(R.string.info);
             message = getString(R.string.doc_confirmed_successfully);
             icon = android.R.drawable.ic_dialog_info;
-        } else {
+        }
+        else
+        {
             title = getString(R.string.error);
             message = getString(R.string.server_error);
             icon = android.R.drawable.ic_dialog_alert;
@@ -300,11 +350,14 @@ public class DeliveryActivity extends ScannerSupportActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
+    {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode != -1) {
-            if (data != null) {
+        if (resultCode != -1)
+        {
+            if (data != null)
+            {
                 String barcode = data.getStringExtra("barcode");
                 onScanComplete(barcode);
             }
@@ -312,17 +365,20 @@ public class DeliveryActivity extends ScannerSupportActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         MenuItem itemSearch = menu.findItem(R.id.check_doc_status);
-        itemSearch.setOnMenuItemClickListener(menuItem -> {
+        itemSearch.setOnMenuItemClickListener(menuItem ->
+        {
             Intent intent = new Intent(this, CheckDocStatusActivity.class);
             startActivity(intent);
             return true;
         });
 
         MenuItem itemList = menu.findItem(R.id.list);
-        itemList.setOnMenuItemClickListener(menuItem -> {
+        itemList.setOnMenuItemClickListener(menuItem ->
+        {
             Intent intent = new Intent(this, DocListActivity.class);
             startActivity(intent);
             return true;
@@ -331,13 +387,15 @@ public class DeliveryActivity extends ScannerSupportActivity {
     }
 
     @Override
-    protected void onStop() {
+    protected void onStop()
+    {
         super.onStop();
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume()
+    {
         super.onResume();
         getLocationUpdates();
     }

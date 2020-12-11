@@ -18,7 +18,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SendingActivity extends ScannerSupportActivity {
+public class SendingActivity extends ScannerSupportActivity
+{
 
     Button scanCam;
     Button confirm;
@@ -38,7 +39,8 @@ public class SendingActivity extends ScannerSupportActivity {
     private String status;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sending);
 
@@ -61,11 +63,13 @@ public class SendingActivity extends ScannerSupportActivity {
         scanCam.setOnClickListener(view -> startActivityForResult(new Intent(
                 this, BarcodeScannerCamera.class), 1));
 
-        confirm.setOnClickListener(view -> {
+        confirm.setOnClickListener(view ->
+        {
             AlertDialog dialog = new AlertDialog.Builder(this)
                     .setMessage("Təsdiqləmək istəyirsinizmi?")
                     .setCancelable(false)
-                    .setPositiveButton("Bəli", (dialogInterface, i) -> {
+                    .setPositiveButton("Bəli", (dialogInterface, i) ->
+                    {
                         changeDocStatus();
                         clearFields();
                         changeFillingStatus();
@@ -75,7 +79,8 @@ public class SendingActivity extends ScannerSupportActivity {
             dialog.show();
         });
 
-        cancel.setOnClickListener(view -> {
+        cancel.setOnClickListener(view ->
+        {
             clearFields();
             changeFillingStatus();
         });
@@ -83,19 +88,23 @@ public class SendingActivity extends ScannerSupportActivity {
         returnCheck.setOnCheckedChangeListener((compoundButton, b) -> returnMode = b);
     }
 
-    private void changeFillingStatus() {
+    private void changeFillingStatus()
+    {
         confirm.setEnabled(filled);
         cancel.setEnabled(filled);
         noteEdit.setEnabled(filled);
     }
 
     @Override
-    public void onScanComplete(String barcode) {
+    public void onScanComplete(String barcode)
+    {
         trxNo = barcode;
         if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")
-                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI")) {
+                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI"))
+        {
             showProgressDialog(true);
-            new Thread(() -> {
+            new Thread(() ->
+            {
                 String action = returnMode ? "return" : "sending";
                 String url = url("logistics", action);
                 Map<String, String> parameters = new HashMap<>();
@@ -106,27 +115,35 @@ public class SendingActivity extends ScannerSupportActivity {
                         .setConnectTimeout(config().getConnectionTimeout() * 1000);
                 template.getMessageConverters().add(new StringHttpMessageConverter());
                 String[] result;
-                try {
+                try
+                {
                     result = template.getForObject(url, String[].class);
                     runOnUiThread(() -> publishResult(result));
-                } catch (RuntimeException ex) {
+                }
+                catch (RuntimeException ex)
+                {
                     ex.printStackTrace();
                     runOnUiThread(() ->
                             showMessageDialog(getString(R.string.error),
                                     getString(R.string.connection_error),
                                     android.R.drawable.ic_dialog_alert)
                     );
-                } finally {
+                }
+                finally
+                {
                     runOnUiThread(() -> showProgressDialog(false));
                 }
             }).start();
-        } else
+        }
+        else
             showMessageDialog(getString(R.string.info), getString(R.string.invalid_trx_no),
                     android.R.drawable.ic_dialog_info);
     }
 
-    private void publishResult(String[] result) {
-        if (result != null) {
+    private void publishResult(String[] result)
+    {
+        if (result != null)
+        {
             trxNoEdit.setText(trxNo);
             driverCodeEdit.setText(result[0]);
             driverNameEdit.setText(result[1]);
@@ -134,15 +151,18 @@ public class SendingActivity extends ScannerSupportActivity {
             returnCheck.setEnabled(false);
 
             note = result[3];
-            if (!note.isEmpty()) {
+            if (!note.isEmpty())
+            {
                 String[] split = note.split("; ");
-                if (split.length > 1) {
+                if (split.length > 1)
+                {
                     String[] split1 = split[1].split(": ");
                     if (split1.length > 1)
                         note = split1[1];
                     else
                         note = "";
-                } else
+                }
+                else
                     note = "";
             }
             noteEdit.setText(note.equals("null") ? "" : note);
@@ -151,12 +171,15 @@ public class SendingActivity extends ScannerSupportActivity {
             filled = true;
             changeFillingStatus();
 
-            if (status.equals("PL")) {
+            if (status.equals("PL"))
+            {
                 showMessageDialog(getString(R.string.info),
                         getString(R.string.caution_doc_have_sent_already),
                         android.R.drawable.ic_dialog_info);
             }
-        } else {
+        }
+        else
+        {
             clearFields();
             changeFillingStatus();
             showMessageDialog(getString(R.string.info),
@@ -165,7 +188,8 @@ public class SendingActivity extends ScannerSupportActivity {
         }
     }
 
-    private void clearFields() {
+    private void clearFields()
+    {
         filled = false;
         trxNoEdit.setText("");
         driverCodeEdit.setText("");
@@ -176,10 +200,12 @@ public class SendingActivity extends ScannerSupportActivity {
         returnCheck.setEnabled(true);
     }
 
-    private void changeDocStatus() {
+    private void changeDocStatus()
+    {
         status = returnMode ? "PL" : "YC";
         showProgressDialog(true);
-        new Thread(() -> {
+        new Thread(() ->
+        {
             note = "İstifadəçi: " + config().getUser().getId();
             if (!noteEdit.getText().toString().isEmpty())
                 note += "; Qeyd: " + noteEdit.getText().toString();
@@ -195,28 +221,37 @@ public class SendingActivity extends ScannerSupportActivity {
                     .setConnectTimeout(config().getConnectionTimeout() * 1000);
             template.getMessageConverters().add(new StringHttpMessageConverter());
             boolean result;
-            try {
+            try
+            {
                 result = template.postForObject(url, null, Boolean.class);
                 runOnUiThread(() -> onPostExecute(result));
-            } catch (RuntimeException ex) {
+            }
+            catch (RuntimeException ex)
+            {
                 ex.printStackTrace();
                 showMessageDialog(getString(R.string.error), getString(R.string.connection_error),
                         android.R.drawable.ic_dialog_alert);
-            } finally {
+            }
+            finally
+            {
                 runOnUiThread(() -> showProgressDialog(false));
             }
         }).start();
     }
 
-    private void onPostExecute(boolean result) {
+    private void onPostExecute(boolean result)
+    {
         String message;
         String title;
         int icon;
-        if (result) {
+        if (result)
+        {
             title = getString(R.string.info);
             message = getString(R.string.doc_confirmed_successfully);
             icon = android.R.drawable.ic_dialog_info;
-        } else {
+        }
+        else
+        {
             title = getString(R.string.error);
             message = getString(R.string.server_error);
             icon = android.R.drawable.ic_dialog_alert;
@@ -225,12 +260,16 @@ public class SendingActivity extends ScannerSupportActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
+    {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode != -1) {
-            if (data != null) {
-                if (resultCode == 1) {
+        if (resultCode != -1)
+        {
+            if (data != null)
+            {
+                if (resultCode == 1)
+                {
                     String barcode = data.getStringExtra("barcode");
                     onScanComplete(barcode);
                 }
@@ -239,17 +278,20 @@ public class SendingActivity extends ScannerSupportActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         MenuItem itemSearch = menu.findItem(R.id.check_doc_status);
-        itemSearch.setOnMenuItemClickListener(menuItem -> {
+        itemSearch.setOnMenuItemClickListener(menuItem ->
+        {
             Intent intent = new Intent(this, CheckDocStatusActivity.class);
             startActivity(intent);
             return true;
         });
 
         MenuItem itemList = menu.findItem(R.id.list);
-        itemList.setOnMenuItemClickListener(menuItem -> {
+        itemList.setOnMenuItemClickListener(menuItem ->
+        {
             Intent intent = new Intent(this, DocListActivity.class);
             startActivity(intent);
             return true;

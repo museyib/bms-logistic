@@ -1,15 +1,18 @@
 package az.inci.bmslogistic;
 
-public class Point {
+public class Point
+{
     double longitude;
     double latitude;
 
-    public Point(double longitude, double latitude) {
+    public Point(double longitude, double latitude)
+    {
         this.longitude = longitude;
         this.latitude = latitude;
     }
 
-    public double getDistance(Point point) {
+    public double getDistance(Point point)
+    {
         double distance = 0;
         if (point == null)
             return distance;

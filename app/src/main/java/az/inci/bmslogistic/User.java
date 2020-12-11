@@ -2,7 +2,8 @@ package az.inci.bmslogistic;
 
 import androidx.annotation.NonNull;
 
-public class User {
+public class User
+{
 
     private String id;
     private String password;
@@ -17,105 +18,130 @@ public class User {
     private boolean docFlag;
     private boolean loadingFlag;
 
-    String getId() {
+    String getId()
+    {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(String id)
+    {
         this.id = id;
     }
 
-    String getPassword() {
+    String getPassword()
+    {
         return password;
     }
 
-    void setPassword(String password) {
+    void setPassword(String password)
+    {
         this.password = password;
     }
 
-    boolean isCollect() {
+    boolean isCollect()
+    {
         return collectFlag;
     }
 
-    void setCollectFlag(boolean collectFlag) {
+    void setCollectFlag(boolean collectFlag)
+    {
         this.collectFlag = collectFlag;
     }
 
-    boolean isPick() {
+    boolean isPick()
+    {
         return pickFlag;
     }
 
-    void setPickFlag(boolean pickFlag) {
+    void setPickFlag(boolean pickFlag)
+    {
         this.pickFlag = pickFlag;
     }
 
-    boolean isCheck() {
+    boolean isCheck()
+    {
         return checkFlag;
     }
 
-    void setCheckFlag(boolean checkFlag) {
+    void setCheckFlag(boolean checkFlag)
+    {
         this.checkFlag = checkFlag;
     }
 
-    boolean isCount() {
+    boolean isCount()
+    {
         return countFlag;
     }
 
-    void setCountFlag(boolean countFlag) {
+    void setCountFlag(boolean countFlag)
+    {
         this.countFlag = countFlag;
     }
 
-    boolean isLocation() {
+    boolean isLocation()
+    {
         return locationFlag;
     }
 
-    void setLocationFlag(boolean locationFlag) {
+    void setLocationFlag(boolean locationFlag)
+    {
         this.locationFlag = locationFlag;
     }
 
-    boolean isPack() {
+    boolean isPack()
+    {
         return packFlag;
     }
 
-    void setPackFlag(boolean packFlag) {
+    void setPackFlag(boolean packFlag)
+    {
         this.packFlag = packFlag;
     }
 
-    boolean isDoc() {
+    boolean isDoc()
+    {
         return docFlag;
     }
 
-    void setDocFlag(boolean docFlag) {
+    void setDocFlag(boolean docFlag)
+    {
         this.docFlag = docFlag;
     }
 
-    String getPickGroup() {
+    String getPickGroup()
+    {
         return pickGroup;
     }
 
-    void setPickGroup(String pickGroup) {
+    void setPickGroup(String pickGroup)
+    {
         this.pickGroup = pickGroup;
     }
 
-    String getName() {
+    String getName()
+    {
         return name;
     }
 
-    void setName(String name) {
+    void setName(String name)
+    {
         this.name = name;
     }
 
-    public boolean isLoading() {
+    public boolean isLoading()
+    {
         return loadingFlag;
     }
 
-    public void setLoadingFlag(boolean loadingFlag) {
+    public void setLoadingFlag(boolean loadingFlag)
+    {
         this.loadingFlag = loadingFlag;
     }
 
     @NonNull
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "User{" +
                 "id='" + id + '\'' +
                 ", password='" + password + '\'' +

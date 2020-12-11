@@ -14,7 +14,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CheckDocStatusActivity extends ScannerSupportActivity {
+public class CheckDocStatusActivity extends ScannerSupportActivity
+{
 
     Button scanCam;
 
@@ -26,11 +27,10 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
     EditText noteEdit;
 
     private String trxNo;
-    private String note;
-    private String status;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_doc_status);
 
@@ -50,12 +50,15 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
     }
 
     @Override
-    public void onScanComplete(String barcode) {
+    public void onScanComplete(String barcode)
+    {
         trxNo = barcode;
         if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")
-                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI")) {
+                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI"))
+        {
             showProgressDialog(true);
-            new Thread(() -> {
+            new Thread(() ->
+            {
                 String url = url("logistics", "check-doc-status");
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("trx-no", barcode);
@@ -65,37 +68,46 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
                         .setConnectTimeout(config().getConnectionTimeout() * 1000);
                 template.getMessageConverters().add(new StringHttpMessageConverter());
                 String[] result;
-                try {
+                try
+                {
                     result = template.getForObject(url, String[].class);
                     runOnUiThread(() -> publishResult(result));
-                } catch (RuntimeException ex) {
+                }
+                catch (RuntimeException ex)
+                {
                     ex.printStackTrace();
                     runOnUiThread(() ->
                             showMessageDialog(getString(R.string.error),
                                     getString(R.string.connection_error),
                                     android.R.drawable.ic_dialog_alert)
                     );
-                } finally {
+                }
+                finally
+                {
                     runOnUiThread(() -> showProgressDialog(false));
                 }
             }).start();
-        } else
+        }
+        else
             showMessageDialog(getString(R.string.info), getString(R.string.invalid_trx_no),
                     android.R.drawable.ic_dialog_info);
     }
 
-    private void publishResult(String[] result) {
+    private void publishResult(String[] result)
+    {
         String statusText = "";
-        if (result != null) {
+        if (result != null)
+        {
             trxNoEdit.setText(trxNo);
             driverCodeEdit.setText(result[0]);
             driverNameEdit.setText(result[1]);
             vehicleCodeEdit.setText(result[2]);
             noteEdit.setText(result[3].equals("null") ? "" : result[3] + "; " + result[5]);
 
-            status = result[4];
+            String status = result[4];
 
-            switch (status) {
+            switch (status)
+            {
                 case "PL":
                     statusText = status + ": Bir dəfə çıxışa verilib və anbara qayıdıb";
                     break;
@@ -110,7 +122,9 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
                     break;
             }
 
-        } else {
+        }
+        else
+        {
             clearFields();
             statusText = "Sənəd yükləməyə verilməyib";
         }
@@ -118,7 +132,8 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
         statusEdit.setText(statusText);
     }
 
-    private void clearFields() {
+    private void clearFields()
+    {
         trxNoEdit.setText("");
         driverCodeEdit.setText("");
         driverNameEdit.setText("");
@@ -127,12 +142,16 @@ public class CheckDocStatusActivity extends ScannerSupportActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
+    {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode != -1) {
-            if (data != null) {
-                if (resultCode == 1) {
+        if (resultCode != -1)
+        {
+            if (data != null)
+            {
+                if (resultCode == 1)
+                {
                     String barcode = data.getStringExtra("barcode");
                     onScanComplete(barcode);
                 }
