@@ -2,17 +2,24 @@ package az.inci.bmslogistic;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -24,6 +31,9 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +50,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
     Button refresh;
     ListView docListView;
+    ImageButton printBtn;
 
     List<ShipDoc> docList;
     String startDate;
@@ -55,6 +66,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
             findViewById(R.id.header).setVisibility(View.GONE);
 
         refresh = findViewById(R.id.refresh);
+        printBtn = findViewById(R.id.print);
         docListView = findViewById(R.id.doc_list);
 
         refresh.setOnClickListener(view ->
@@ -85,6 +97,15 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
                     .create();
 
             dialog.show();
+        });
+
+        printBtn.setOnClickListener(v ->
+        {
+            if (docList != null && docList.size() > 0)
+            {
+                showProgressDialog(true);
+                print(getPrintForm());
+            }
         });
 
         loadFooter();
@@ -255,5 +276,105 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
                 }
             };
         }
+    }
+
+    private void print(String html)
+    {
+        WebView webView = new WebView(this);
+        webView.setWebViewClient(new WebViewClient()
+        {
+
+            public boolean shouldOverrideUrlLoading(WebView view, String url)
+            {
+                return false;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url)
+            {
+                showProgressDialog(false);
+                createWebPrintJob(view);
+            }
+        });
+
+        webView.loadDataWithBaseURL(null, html, "text/HTML", "UTF-8", null);
+    }
+
+    private void createWebPrintJob(WebView webView)
+    {
+        PrintManager printManager = (PrintManager) this
+                .getSystemService(Context.PRINT_SERVICE);
+
+        String jobName = getString(R.string.app_name) + " Document";
+
+        PrintDocumentAdapter printAdapter;
+        PrintAttributes.Builder builder = new PrintAttributes.Builder()
+                .setMediaSize(PrintAttributes.MediaSize.ISO_A4);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            printAdapter = webView.createPrintDocumentAdapter(jobName);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                builder.setDuplexMode(PrintAttributes.DUPLEX_MODE_LONG_EDGE);
+            printManager.print(jobName, printAdapter, builder.build());
+        }
+        else
+        {
+            try
+            {
+
+                Class<?> printDocumentAdapterClass = Class.forName("android.print.PrintDocumentAdapter");
+                Method createPrintDocumentAdapterMethod = webView.getClass().getMethod("createPrintDocumentAdapter");
+                Object printAdapterObject = createPrintDocumentAdapterMethod.invoke(webView);
+
+                Class<?> printAttributesBuilderClass = Class.forName("android.print.PrintAttributes$Builder");
+                Constructor<?> constructor = printAttributesBuilderClass.getConstructor();
+                Object printAttributes = constructor.newInstance();
+                Method buildMethod = printAttributes.getClass().getMethod("build");
+                Object printAttributesBuild = buildMethod.invoke(printAttributes);
+
+                Method printMethod = printManager.getClass().getMethod("print", String.class, printDocumentAdapterClass, printAttributesBuild.getClass());
+                printMethod.invoke(printManager, jobName, printAdapterObject, builder.build());
+            }
+            catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getPrintForm()
+    {
+        String html = "<html><head><style>*{margin:0px; padding:0px}" +
+                "table,tr,th,td{border: 1px solid black;border-collapse: collapse; font-size: 12px}" +
+                "th{background-color: #636d72;color:white}td,th{padding:0 4px 0 4px}</style>" +
+                "</head><body>";
+        html = html.concat("<h3 style='text-align: center'>Yüklənən sənədlər</h3></br>");
+        html = html.concat("<table>");
+        html = html.concat("<tr><th>Sənəd №.</th>");
+        html = html.concat("<th>Tarix</th>");
+        html = html.concat("<th>Sürücü</th>");
+        html = html.concat("<th>Status</th>");
+        html = html.concat("<th>Müştəri kodu</th>");
+        html = html.concat("<th>Müştəri adı</th>");
+        html = html.concat("<th>Təmsilçi kodu</th>");
+        html = html.concat("<th>Təmsilçi adı</th>");
+        for (ShipDoc shipDoc : docList)
+        {
+
+            html = html.concat("<tr><td>" + shipDoc.getTrxNo() + "</td>");
+            html = html.concat("<td nowrap>" + shipDoc.getTrxDate() + "</td>");
+            html = html.concat("<td>" + shipDoc.getDriverName() + "</td>");
+            html = html.concat("<td>" + shipDoc.getShipStatus() + "</td>");
+            html = html.concat("<td>" + shipDoc.getBpCode() + "</td>");
+            html = html.concat("<td>" + shipDoc.getBpName() + "</td>");
+            html = html.concat("<td>" + shipDoc.getSbeCode() + "</td>");
+            html = html.concat("<td>" + shipDoc.getSbeName() + "</td></tr>");
+        }
+
+        html = html.concat("</table></body></head>");
+
+        return html;
     }
 }

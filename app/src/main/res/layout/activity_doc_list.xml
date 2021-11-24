@@ -19,6 +19,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/refresh" />
+
+        <ImageButton
+            android:id="@+id/print"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/print"
+            app:srcCompat="@drawable/printer" />
     </TableRow>
 
     <HorizontalScrollView

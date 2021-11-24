@@ -19,13 +19,13 @@
         android:id="@+id/server_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/server_url"
         android:inputType="textUri"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/server_url_label" />
+        app:layout_constraintTop_toBottomOf="@id/server_url_label"
+        android:importantForAutofill="no" />
 
     <TextView
         android:id="@+id/connection_timeout_label"
@@ -41,13 +41,13 @@
         android:id="@+id/connection_timeout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/connection_timeout"
         android:inputType="number"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/connection_timeout_label" />
+        app:layout_constraintTop_toBottomOf="@id/connection_timeout_label"
+        android:importantForAutofill="no" />
 
     <Button
         android:id="@+id/update"

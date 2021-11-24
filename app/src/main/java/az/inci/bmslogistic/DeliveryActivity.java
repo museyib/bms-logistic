@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -24,7 +25,9 @@ import com.google.android.gms.location.LocationServices;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,6 +93,17 @@ public class DeliveryActivity extends ScannerSupportActivity
                 {
                     currentLongitude = location.getLongitude();
                     currentLatitude = location.getLatitude();
+
+                    Geocoder geocoder = new Geocoder(DeliveryActivity.this);
+
+                    try {
+                        updateDocLocation(geocoder
+                                .getFromLocation(currentLatitude, currentLongitude, 1)
+                                .get(0)
+                                .getAddressLine(0));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
@@ -347,6 +361,38 @@ public class DeliveryActivity extends ScannerSupportActivity
             icon = android.R.drawable.ic_dialog_alert;
         }
         showMessageDialog(title, message, icon);
+    }
+
+
+    private void updateDocLocation(String address)
+    {
+        new Thread(() ->
+        {
+            note = "İstifadəçi: " + config().getUser().getId();
+            if (!noteEdit.getText().toString().isEmpty())
+                note += "; Qeyd: " + noteEdit.getText().toString();
+            deliverPerson = deliverPersonEdit.getText().toString();
+
+            String url = url("logistics", "update-location");
+            RestTemplate template = new RestTemplate();
+            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
+                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
+            template.getMessageConverters().add(new StringHttpMessageConverter());
+
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
+                    .queryParam("latitude", currentLatitude)
+                    .queryParam("aptitude", currentLongitude)
+                    .queryParam("address", address)
+                    .queryParam("user-id", config().getUser().getId());
+            try
+            {
+                template.postForObject(builder.toUriString(), null, Boolean.class);
+            }
+            catch (RuntimeException ex)
+            {
+                ex.printStackTrace();
+            }
+        }).start();
     }
 
     @Override
