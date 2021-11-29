@@ -166,48 +166,83 @@ public class DeliveryActivity extends ScannerSupportActivity
         deliverPersonEdit.setEnabled(filled);
     }
 
-    @Override
-    public void onScanComplete(String barcode)
+    private void checkShipmentValidation(String barcode)
     {
         trxNo = barcode;
-        if (trxNo.startsWith("ITO") || trxNo.startsWith("DLV") || trxNo.startsWith("ITD")
-                || trxNo.startsWith("SIN") || trxNo.startsWith("ITI"))
-        {
-            showProgressDialog(true);
-            new Thread(() ->
+        showProgressDialog(true);
+        new Thread(() -> {
+            String url = url("doc", "shipment-is-valid");
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("trx-no", trxNo);
+            url = addRequestParameters(url, parameters);
+            RestTemplate template = new RestTemplate();
+            template.getMessageConverters().add(new StringHttpMessageConverter());
+            boolean result;
+            try
             {
-                String url = url("logistics", "delivery");
-                Map<String, String> parameters = new HashMap<>();
-                parameters.put("trx-no", barcode);
-                url = addRequestParameters(url, parameters);
-                RestTemplate template = new RestTemplate();
-                ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                        .setConnectTimeout(config().getConnectionTimeout() * 1000);
-                template.getMessageConverters().add(new StringHttpMessageConverter());
-                String[] result;
-                try
-                {
-                    result = template.getForObject(url, String[].class);
-                    runOnUiThread(() -> publishResult(result));
-                }
-                catch (RuntimeException ex)
-                {
-                    ex.printStackTrace();
-                    runOnUiThread(() ->
-                            showMessageDialog(getString(R.string.error),
-                                    getString(R.string.connection_error),
-                                    android.R.drawable.ic_dialog_alert)
-                    );
-                }
-                finally
-                {
-                    runOnUiThread(() -> showProgressDialog(false));
-                }
-            }).start();
-        }
-        else
-            showMessageDialog(getString(R.string.info), getString(R.string.invalid_trx_no),
-                    android.R.drawable.ic_dialog_info);
+                result = template.getForObject(url, Boolean.class);
+            }
+            catch (RuntimeException e)
+            {
+                e.printStackTrace();
+                runOnUiThread(() -> showMessageDialog(getString(R.string.error),
+                        getString(R.string.connection_error),
+                        android.R.drawable.ic_dialog_alert));
+                playSound(SOUND_FAIL);
+                return;
+            }
+            if (result) {
+                getShipDetails(trxNo);
+                playSound(SOUND_SUCCESS);
+            } else {
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error),
+                            getString(R.string.not_valid_doc_for_shipping),
+                            android.R.drawable.ic_dialog_alert);
+                    showProgressDialog(false);
+                });
+                playSound(SOUND_FAIL);
+            }
+        }).start();
+    }
+
+    private void getShipDetails(String trxNo)
+    {
+        new Thread(() ->
+        {
+            String url = url("logistics", "delivery");
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("trx-no", trxNo);
+            url = addRequestParameters(url, parameters);
+            RestTemplate template = new RestTemplate();
+            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
+                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
+            template.getMessageConverters().add(new StringHttpMessageConverter());
+            String[] result;
+            try
+            {
+                result = template.getForObject(url, String[].class);
+                runOnUiThread(() -> publishResult(result));
+            }
+            catch (RuntimeException ex)
+            {
+                ex.printStackTrace();
+                runOnUiThread(() ->
+                        showMessageDialog(getString(R.string.error),
+                                getString(R.string.connection_error),
+                                android.R.drawable.ic_dialog_alert)
+                );
+            }
+            finally {
+                runOnUiThread(() -> showProgressDialog(false));
+            }
+        }).start();
+    }
+
+    @Override
+    public void onScanComplete(String trxNo)
+    {
+        checkShipmentValidation(trxNo);
     }
 
     private void publishResult(String[] result)
