@@ -12,8 +12,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
@@ -177,20 +179,36 @@ public class MainActivity extends AppBaseActivity
         else
         {
             dbHelper.updateLastLogin(id, password);
-            Class<?> aClass;
             switch (mode)
             {
                 case AppConfig.SEND_MODE:
-                    aClass = SendingActivity.class;
+                    View view = getLayoutInflater().inflate(R.layout.select_sending_mode_layout,
+                            findViewById(android.R.id.content), false);
+                    RadioButton singleButton = view.findViewById(R.id.single_mode);
+                    RadioButton multipleButton = view.findViewById(R.id.multiple_mode);
+
+                    AlertDialog selectModeDialog = new AlertDialog.Builder(this)
+                            .setView(view)
+                            .setTitle("Rejim seç")
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                Class<?> aClass = null;
+                                if (singleButton.isChecked())
+                                    aClass = SendingActivity.class;
+                                else if (multipleButton.isChecked())
+                                    aClass = SendingListActivity.class;
+
+                                if (aClass != null) {
+                                    Intent intent = new Intent(MainActivity.this, aClass);
+                                    startActivity(intent);
+                                }
+                                    }).create();
+                    selectModeDialog.show();
                     break;
                 case AppConfig.DLV_MODE:
-                    aClass = DeliveryActivity.class;
+                    Intent intent = new Intent(MainActivity.this, DeliveryActivity.class);
+                    startActivity(intent);
                     break;
-                default:
-                    aClass = null;
             }
-            Intent intent = new Intent(MainActivity.this, aClass);
-            startActivity(intent);
         }
     }
 
@@ -255,7 +273,7 @@ public class MainActivity extends AppBaseActivity
         {
             String url = url("download");
             Map<String, String> parameters = new HashMap<>();
-            parameters.put("file-name", "BMSAnbar");
+            parameters.put("file-name", "BMSLogistic");
             url = addRequestParameters(url, parameters);
             RestTemplate template = new RestTemplate();
             ((SimpleClientHttpRequestFactory) template.getRequestFactory())
@@ -287,7 +305,7 @@ public class MainActivity extends AppBaseActivity
                     android.R.drawable.ic_dialog_info);
             return;
         }
-        File file = new File(Environment.getExternalStorageDirectory().getPath() + "/BMSAnbar.apk");
+        File file = new File(Environment.getExternalStorageDirectory().getPath() + "/BMSLogistic.apk");
         if (!file.exists())
         {
             try

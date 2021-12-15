@@ -76,6 +76,7 @@
         <activity
             android:name=".BarcodeScannerCamera"
             android:label="Kamera skaner" />
+        <activity android:name=".SendingListActivity" />
     </application>
 
 </manifest>

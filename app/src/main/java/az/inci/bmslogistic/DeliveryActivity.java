@@ -128,7 +128,8 @@ public class DeliveryActivity extends ScannerSupportActivity
             Point currentPoint = new Point(currentLongitude, currentLatitude);
             Point targetPoint = new Point(targetLongitude, targetLatitude);
 
-            if (currentPoint.getDistance(targetPoint) <= 100)
+            if (currentPoint.getDistance(targetPoint) <= 100
+                    || targetCodeEdit.getText().toString().equals("B0013914"))
             {
 
                 AlertDialog dialog = new AlertDialog.Builder(this)
@@ -185,9 +186,12 @@ public class DeliveryActivity extends ScannerSupportActivity
             catch (RuntimeException e)
             {
                 e.printStackTrace();
-                runOnUiThread(() -> showMessageDialog(getString(R.string.error),
-                        getString(R.string.connection_error),
-                        android.R.drawable.ic_dialog_alert));
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error),
+                            getString(R.string.connection_error),
+                            android.R.drawable.ic_dialog_alert);
+                    showProgressDialog(false);
+                });
                 playSound(SOUND_FAIL);
                 return;
             }
@@ -275,7 +279,8 @@ public class DeliveryActivity extends ScannerSupportActivity
             String targetName = result[6];
             targetCodeEdit.setText(targetCode);
             targetNameEdit.setText(targetName);
-            if (result[7].isEmpty() || result[8].isEmpty())
+            if ((result[7].isEmpty() || result[8].isEmpty())
+                    && !targetCode.equals("B0013914"))
             {
                 showMessageDialog(getString(R.string.info),
                         getString(R.string.not_found_location_for_target),
@@ -284,8 +289,15 @@ public class DeliveryActivity extends ScannerSupportActivity
             }
             else
             {
-                targetLongitude = Double.parseDouble(result[7]);
-                targetLatitude = Double.parseDouble(result[8]);
+                try {
+                    targetLongitude = Double.parseDouble(result[7]);
+                    targetLatitude = Double.parseDouble(result[8]);
+                }
+                catch (NumberFormatException e)
+                {
+                    targetLongitude = 0;
+                    targetLatitude = 0;
+                }
             }
             filled = true;
             changeFillingStatus();
