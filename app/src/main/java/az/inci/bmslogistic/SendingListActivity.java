@@ -3,6 +3,7 @@ package az.inci.bmslogistic;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,15 +12,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
-
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import az.inci.bmslogistic.model.ShipDocInfo;
+import az.inci.bmslogistic.model.UpdateDeliveryRequest;
+import az.inci.bmslogistic.model.UpdateDeliveryRequestItem;
 
 public class SendingListActivity extends ScannerSupportActivity
 {
@@ -38,7 +40,6 @@ public class SendingListActivity extends ScannerSupportActivity
     boolean docCreated = false;
 
     boolean returnMode;
-    private String note;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -71,7 +72,7 @@ public class SendingListActivity extends ScannerSupportActivity
                     {
                         String trxNo = (String) parent.getItemAtPosition(position);
                         docList.remove(trxNo);
-                        loadTrx();
+                        loadData();
                     })
                     .setNegativeButton(R.string.cancel, null)
                     .create();
@@ -110,7 +111,7 @@ public class SendingListActivity extends ScannerSupportActivity
 
         if (docCreated)
         {
-            checkShipmentValidation(barcode);
+            getShipDetails(barcode);
         }
         else
         {
@@ -135,7 +136,7 @@ public class SendingListActivity extends ScannerSupportActivity
                     setDriverCode(barcode);
                     break;
                 case SCAN_NEW_DOC:
-                    checkShipmentValidation(barcode);
+                    getShipDetails(barcode);
                     break;
             }
         }
@@ -145,10 +146,34 @@ public class SendingListActivity extends ScannerSupportActivity
     {
         if (driverCode.startsWith("PER"))
         {
-            this.driverCode = driverCode;
-            driverCodeEditText.setText(driverCode);
-            docCreated = true;
-            playSound(SOUND_SUCCESS);
+            showProgressDialog(true);
+            new Thread(() -> {
+                String url = url("personnel", "get-name");
+                Map<String, String> parameters = new HashMap<>();
+                parameters.put("per-code", driverCode);
+                url = addRequestParameters(url, parameters);
+                Log.e("URL", url);
+                String perName = getSimpleObject(url, "GET", null, String.class);
+                if (perName != null)
+                {
+                    runOnUiThread(() -> {
+                        if (!perName.isEmpty())
+                        {
+                            this.driverCode = driverCode;
+                            driverCodeEditText.setText(driverCode);
+                            ((TextView) findViewById(R.id.driver_name)).setText(perName);
+                            playSound(SOUND_SUCCESS);
+                        }
+                        else
+                        {
+                            showMessageDialog(getString(R.string.error),
+                                              getString(R.string.driver_code_incorrect),
+                                              android.R.drawable.ic_dialog_alert);
+                            playSound(SOUND_FAIL);
+                        }
+                    });
+                }
+            }).start();
         }
         else
         {
@@ -158,167 +183,60 @@ public class SendingListActivity extends ScannerSupportActivity
         }
     }
 
-    void loadTrx()
+    void loadData()
     {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item_layout, docList);
         docListView.setAdapter(adapter);
     }
 
-    private void checkShipmentValidation(String trxNo)
+
+    private void getShipDetails(String trxNo)
     {
         if (docList.contains(barcode))
             return;
 
         showProgressDialog(true);
-        new Thread(() -> {
-            String url = url("doc", "shipment-is-valid");
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("trx-no", trxNo);
-            url = addRequestParameters(url, parameters);
-            RestTemplate template = new RestTemplate();
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            boolean result;
-            try
-            {
-                result = template.getForObject(url, Boolean.class);
-            }
-            catch (RuntimeException e)
-            {
-                e.printStackTrace();
-                runOnUiThread(() -> showMessageDialog(getString(R.string.error),
-                        getString(R.string.connection_error),
-                        android.R.drawable.ic_dialog_alert));
-                playSound(SOUND_FAIL);
-                return;
-            }
-            if (result) {
-                checkShipping(trxNo);
-                playSound(SOUND_SUCCESS);
-            } else {
-                runOnUiThread(() -> {
-                    showMessageDialog(getString(R.string.error),
-                            getString(R.string.not_valid_doc_for_shipping),
-                            android.R.drawable.ic_dialog_alert);
-                    showProgressDialog(false);
-                });
-                playSound(SOUND_FAIL);
-            }
-        }).start();
-    }
-
-    private void checkShipping(String trxNo)
-    {
-        showProgressDialog(true);
-        new Thread(() -> {
-            String url = url("trx", "shipped");
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("trx-no", trxNo);
-            url = addRequestParameters(url, parameters);
-            RestTemplate template = new RestTemplate();
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            boolean result;
-            try
-            {
-                result = template.getForObject(url, Boolean.class);
-            }
-            catch (RuntimeException e)
-            {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    showMessageDialog(getString(R.string.error),
-                            getString(R.string.connection_error),
-                            android.R.drawable.ic_dialog_alert);
-                    showProgressDialog(false);
-                });
-                playSound(SOUND_FAIL);
-                return;
-            }
-
-            if (result) {
-                getShipDetails(trxNo);
-                playSound(SOUND_SUCCESS);
-            } else {
-                runOnUiThread(() -> {
-                    showMessageDialog(getString(R.string.error),
-                            getString(R.string.not_shipped_for_current_driver),
-                            android.R.drawable.ic_dialog_alert);
-                    showProgressDialog(false);
-                });
-                playSound(SOUND_FAIL);
-            }
-        }).start();
-    }
-
-
-    private void getShipDetails(String trxNo)
-    {
-        showProgressDialog(true);
         new Thread(() ->
         {
-            String action = returnMode ? "return" : "sending";
+            String action = returnMode ? "doc-info-for-return" : "doc-info-for-sending";
             String url = url("logistics", action);
             Map<String, String> parameters = new HashMap<>();
             parameters.put("trx-no", trxNo);
             url = addRequestParameters(url, parameters);
-            RestTemplate template = new RestTemplate();
-            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            String[] result;
-            try
-            {
-                result = template.getForObject(url, String[].class);
-                runOnUiThread(() -> addDoc(trxNo, result));
-            }
-            catch (RuntimeException ex)
-            {
-                ex.printStackTrace();
-                runOnUiThread(() ->
-                        showMessageDialog(getString(R.string.error),
-                                getString(R.string.connection_error),
-                                android.R.drawable.ic_dialog_alert)
-                );
-            }
-            finally {
-                runOnUiThread(() -> showProgressDialog(false));
-            }
+            ShipDocInfo docInfo = getSimpleObject(url, "GET", null, ShipDocInfo.class);
+            if (docInfo != null)
+                runOnUiThread(() -> addDoc(trxNo, docInfo));
         }).start();
     }
 
-    private void addDoc(String trxNo, String[] result)
+    private void addDoc(String trxNo, ShipDocInfo docInfo)
     {
-        if (result != null)
-        {
-            if (!driverCode.equals(result[0]))
-            {
-                showMessageDialog(getString(R.string.info),
-                        getString(R.string.not_shipped_for_current_driver)
-                                + "\n\nYükləndiyi sürücü  və N/V nömrəsi:\n"
-                        + result[0] + " - " + result[1] + "\n" + result[2],
-                        android.R.drawable.ic_dialog_info);
-                return;
-            }
-
-            String status = result[4];
-
-            if (status.equals("PL"))
-            {
-                showMessageDialog(getString(R.string.info),
-                        getString(R.string.caution_doc_have_sent_already),
-                        android.R.drawable.ic_dialog_info);
-                return;
-            }
-
-            docList.add(trxNo);
-            scanDriverCode.setVisibility(View.GONE);
-            loadTrx();
-        }
-        else
+        if (!driverCode.equals(docInfo.getDriverCode()))
         {
             showMessageDialog(getString(R.string.info),
-                    getString(R.string.doc_status_incorrect),
-                    android.R.drawable.ic_dialog_info);
+                              getString(R.string.not_shipped_for_current_driver) +
+                              "\n\nYükləndiyi sürücü  və N/V nömrəsi:\n" +
+                              docInfo.getDriverName() + " - " + docInfo.getVehicleCode() +
+                              "\n" + docInfo.getDeliverNotes(),
+                              android.R.drawable.ic_dialog_info);
+            playSound(SOUND_FAIL);
+            return;
         }
+
+//            String status = docInfo.getShipStatus();
+//
+//            if (status.equals("PL"))
+//            {
+//                showMessageDialog(getString(R.string.info),
+//                        getString(R.string.caution_doc_have_sent_already),
+//                        android.R.drawable.ic_dialog_info);
+//                return;
+//            }
+
+        playSound(SOUND_SUCCESS);
+        docList.add(trxNo);
+        scanDriverCode.setVisibility(View.GONE);
+        loadData();
     }
 
     private void changeDocStatus()
@@ -326,71 +244,45 @@ public class SendingListActivity extends ScannerSupportActivity
         showProgressDialog(true);
         new Thread(() ->
         {
+            String note = "İstifadəçi: " + config().getUser().getId();
+            String url = url("logistics", "change-doc-status");
+            Map<String, String> parameters = new HashMap<>();
+            url = addRequestParameters(url, parameters);
+            UpdateDeliveryRequest request = new UpdateDeliveryRequest();
+            request.setStatus("YC");
+            List<UpdateDeliveryRequestItem> requestItems = new ArrayList<>();
             for (String trxNo : docList) {
-                note = "İstifadəçi: " + config().getUser().getId();
-                String url = url("logistics", "change-doc-status");
-                Map<String, String> parameters = new HashMap<>();
-                parameters.put("trx-no", trxNo);
-                parameters.put("status", "YC");
-                parameters.put("note", note);
-                parameters.put("deliver-person", "");
-                url = addRequestParameters(url, parameters);
-                RestTemplate template = new RestTemplate();
-                ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                        .setConnectTimeout(config().getConnectionTimeout() * 1000);
-                template.getMessageConverters().add(new StringHttpMessageConverter());
-                boolean result;
-                try {
-                    result = template.postForObject(url, null, Boolean.class);
-                } catch (RuntimeException ex) {
-                    ex.printStackTrace();
-                    runOnUiThread(() -> {
-                        showMessageDialog(getString(R.string.error), getString(R.string.connection_error),
-                                android.R.drawable.ic_dialog_alert);
-                        showProgressDialog(false);
-                    });
-                    break;
-                }
-                if (!result) {
-                    runOnUiThread(() -> onPostExecute(false));
-                    break;
-                }
+                UpdateDeliveryRequestItem requestItem = new UpdateDeliveryRequestItem();
+                requestItem.setTrxNo(trxNo);
+                requestItem.setNote(note);
+                requestItem.setDeliverPerson("");
+                requestItem.setDriverCode(driverCode);
+                requestItems.add(requestItem);
             }
-            runOnUiThread(() -> onPostExecute(true));
+            request.setRequestItems(requestItems);
+            executeUpdate(url, request, message -> {
+                showMessageDialog(
+                        message.getTitle(),
+                        message.getBody(),
+                        message.getIconId()
+                );
+                if (message.getStatusCode() == 0)
+                    clearFields();
+                else
+                    playSound(SOUND_FAIL);
+            });
         }).start();
-    }
-
-    private void onPostExecute(boolean result)
-    {
-        showProgressDialog(false);
-        String message;
-        String title;
-        int icon;
-        if (result)
-        {
-            title = getString(R.string.info);
-            message = getString(R.string.docs_confirmed_successfully);
-            icon = android.R.drawable.ic_dialog_info;
-
-            clearFields();
-        }
-        else
-        {
-            title = getString(R.string.error);
-            message = getString(R.string.server_error);
-            icon = android.R.drawable.ic_dialog_alert;
-        }
-        showMessageDialog(title, message, icon);
     }
 
     private void clearFields()
     {
         driverCode = "";
         driverCodeEditText.setText("");
+        ((TextView) findViewById(R.id.driver_name)).setText("");
         docCreated = false;
         docList.clear();
         scanDriverCode.setVisibility(View.VISIBLE);
-        loadTrx();
+        loadData();
     }
 
     @Override

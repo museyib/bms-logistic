@@ -14,7 +14,9 @@ import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
@@ -23,29 +25,38 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
+import com.google.android.gms.location.Priority;
+import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.net.URL;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import az.inci.bmslogistic.model.UpdateDocLocationRequest;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 public class LocationService extends Service
 {
     public static final String CHANNEL_ID = "location";
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
+    static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
     private final LocationCallback locationCallback = new LocationCallback()
     {
         @Override
-        public void onLocationResult(LocationResult locationResult)
+        public void onLocationResult(@NonNull LocationResult locationResult)
         {
             super.onLocationResult(locationResult);
             Location currentLocation = locationResult.getLastLocation();
-            new Thread(() -> sendLocation(currentLocation.getLatitude(), currentLocation.getLongitude())).start();
+            new Thread(() -> {
+                if (currentLocation != null)
+                {
+                    sendLocation(currentLocation.getLatitude(), currentLocation.getLongitude());
+                }
+            }).start();
         }
     };
     Notification notification;
@@ -73,52 +84,51 @@ public class LocationService extends Service
             e.printStackTrace();
         }
         String url = url("logistics", "update-location");
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("latitude", String.valueOf(lat));
-        parameters.put("aptitude", String.valueOf(apt));
-        parameters.put("address", address);
-        parameters.put("user-id", ((App) getApplication()).getConfig().getUser().getId());
-        url = addRequestParameters(url, parameters);
-        RestTemplate template = new RestTemplate();
-        ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                .setConnectTimeout(((App) getApplication()).getConfig().getConnectionTimeout() * 1000);
-        template.getMessageConverters().add(new StringHttpMessageConverter());
-        try
+
+        UpdateDocLocationRequest request = new UpdateDocLocationRequest();
+        request.setLongitude(apt);
+        request.setLatitude(lat);
+        request.setAddress(address);
+        request.setUserId(((App) getApplication()).getConfig().getUser().getId());
+        executeUpdate(url, request);
+    }
+
+    okhttp3.Response sendRequest(URL url, @Nullable Object requestBodyData)
+            throws IOException
+    {
+        OkHttpClient httpClient = new OkHttpClient.Builder().connectTimeout(
+                ((App) getApplication()).getConfig().getConnectionTimeout(), TimeUnit.SECONDS).build();
+
+        RequestBody requestBody = RequestBody.create(new Gson().toJson(requestBodyData),
+                                                     MediaType.get(
+                                                             "application/json;charset=UTF-8"));
+        Request request = new Request.Builder().method("POST", requestBody).url(url).build();
+
+        return httpClient.newCall(request).execute();
+    }
+
+    public void executeUpdate(String urlString, Object requestData)
+    {
+        try (okhttp3.Response httpResponse = sendRequest(new URL(urlString),
+                                                         requestData))
         {
-            template.postForObject(url, null, String.class);
+            Log.i("INFO", httpResponse.toString());
         }
-        catch (RuntimeException ex)
+        catch (IOException e)
         {
-            ex.printStackTrace();
+            e.printStackTrace();
         }
     }
 
     public String url(String... value)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(((App) getApplication()).getConfig().getServerUrl());
+        sb.append(((App) getApplication()).getConfig().getServerUrl()).append("/v2");
         for (String s : value)
         {
             sb.append("/").append(s);
         }
         return sb.toString();
-    }
-
-    public String addRequestParameters(String url, Map<String, String> requestParameters)
-    {
-        StringBuilder builder = new StringBuilder(url);
-        builder.append("?");
-
-        for (Map.Entry<String, String> entry : requestParameters.entrySet())
-        {
-            builder.append(entry.getKey())
-                    .append("=")
-                    .append(entry.getValue())
-                    .append("&");
-        }
-
-        builder.delete(builder.length() - 1, builder.length());
-        return builder.toString();
     }
 
     @Override
@@ -154,11 +164,11 @@ public class LocationService extends Service
             );
             Intent notificationIntent = new Intent(this, LocationService.class);
             PendingIntent pendingIntent =
-                    PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                    PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
             notification = new Notification.Builder(this, CHANNEL_ID)
                     .setContentTitle(getText(R.string.app_name))
                     .setContentText("Location")
-                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                     .setContentIntent(pendingIntent)
                     .setTicker(getText(R.string.app_name))
                     .build();
@@ -177,9 +187,9 @@ public class LocationService extends Service
 
     private void initData()
     {
-        locationRequest = LocationRequest.create();
-        locationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest = new LocationRequest.Builder(UPDATE_INTERVAL_IN_MILLISECONDS)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .build();
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
 

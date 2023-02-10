@@ -27,16 +27,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,11 +42,9 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 {
 
     SearchView searchView;
-
     Button refresh;
     ListView docListView;
     ImageButton printBtn;
-
     List<ShipDoc> docList;
     String startDate;
     String endDate;
@@ -63,44 +56,44 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         setContentView(R.layout.activity_doc_list);
 
         if (docList == null)
-            findViewById(R.id.header).setVisibility(View.GONE);
+        {findViewById(R.id.header).setVisibility(View.GONE);}
 
         refresh = findViewById(R.id.refresh);
         printBtn = findViewById(R.id.print);
         docListView = findViewById(R.id.doc_list);
 
-        refresh.setOnClickListener(view ->
-        {
-            View datePicker = LayoutInflater.from(this).inflate(R.layout.date_interval_picker,
-                    findViewById(android.R.id.content), false);
+        refresh.setOnClickListener(view -> {
+            View datePicker = LayoutInflater.from(this)
+                                            .inflate(R.layout.date_interval_picker,
+                                                     findViewById(android.R.id.content), false);
             EditText dateFromEdit = datePicker.findViewById(R.id.date_from);
             EditText dateToEdit = datePicker.findViewById(R.id.date_to);
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
             if (startDate != null)
-                dateFromEdit.setText(startDate);
+            {dateFromEdit.setText(startDate);}
             else
-                dateFromEdit.setText(format.format(new Date()));
+            {dateFromEdit.setText(format.format(new Date()));}
             if (endDate != null)
-                dateToEdit.setText(endDate);
+            {dateToEdit.setText(endDate);}
             else
-                dateToEdit.setText(format.format(new Date()));
+            {dateToEdit.setText(format.format(new Date()));}
 
-            AlertDialog dialog = new AlertDialog.Builder(this)
-                    .setView(datePicker)
-                    .setPositiveButton("OK", (dialogInterface, i) ->
-                    {
-                        startDate = dateFromEdit.getText().toString();
-                        endDate = dateToEdit.getText().toString();
-                        getDocList();
-                    })
-                    .create();
+            AlertDialog dialog = new AlertDialog.Builder(this).setView(datePicker)
+                                                              .setPositiveButton("OK",
+                                                                                 (dialogInterface, i) -> {
+                                                                                     startDate = dateFromEdit.getText()
+                                                                                                             .toString();
+                                                                                     endDate = dateToEdit.getText()
+                                                                                                         .toString();
+                                                                                     getDocList();
+                                                                                 })
+                                                              .create();
 
             dialog.show();
         });
 
-        printBtn.setOnClickListener(v ->
-        {
+        printBtn.setOnClickListener(v -> {
             if (docList != null && docList.size() > 0)
             {
                 showProgressDialog(true);
@@ -127,43 +120,22 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     public void onBackPressed()
     {
         if (!searchView.isIconified())
-            searchView.setIconified(true);
+        {searchView.setIconified(true);}
         else
-            super.onBackPressed();
+        {super.onBackPressed();}
     }
 
     private void getDocList()
     {
         showProgressDialog(true);
-        new Thread(() ->
-        {
+        new Thread(() -> {
             String url = url("logistics", "doc-list");
             Map<String, String> parameters = new HashMap<>();
             parameters.put("start-date", startDate);
             parameters.put("end-date", endDate);
             url = addRequestParameters(url, parameters);
-            RestTemplate template = new RestTemplate();
-            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            try
-            {
-                docList = Arrays.asList(template.getForObject(url, ShipDoc[].class));
-                runOnUiThread(this::publishResult);
-            }
-            catch (RuntimeException ex)
-            {
-                ex.printStackTrace();
-                runOnUiThread(() ->
-                        showMessageDialog(getString(R.string.error),
-                                getString(R.string.connection_error),
-                                android.R.drawable.ic_dialog_alert)
-                );
-            }
-            finally
-            {
-                runOnUiThread(() -> showProgressDialog(false));
-            }
+            docList = getListData(url, "GET", null, ShipDoc[].class);
+            if (docList != null) runOnUiThread(this::publishResult);
         }).start();
     }
 
@@ -184,8 +156,114 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     {
         DocAdapter adapter = (DocAdapter) docListView.getAdapter();
         if (adapter != null)
-            adapter.getFilter().filter(s);
+        {adapter.getFilter().filter(s);}
         return true;
+    }
+
+    private void print(String html)
+    {
+        WebView webView = new WebView(this);
+        webView.setWebViewClient(new WebViewClient()
+        {
+
+            public boolean shouldOverrideUrlLoading(WebView view, String url)
+            {
+                return false;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url)
+            {
+                showProgressDialog(false);
+                createWebPrintJob(view);
+            }
+        });
+
+        webView.loadDataWithBaseURL(null, html, "text/HTML", "UTF-8", null);
+    }
+
+    private void createWebPrintJob(WebView webView)
+    {
+        PrintManager printManager = (PrintManager) this.getSystemService(Context.PRINT_SERVICE);
+
+        String jobName = getString(R.string.app_name) + " Document";
+
+        PrintDocumentAdapter printAdapter;
+        PrintAttributes.Builder builder = new PrintAttributes.Builder().setMediaSize(
+                PrintAttributes.MediaSize.ISO_A4);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            printAdapter = webView.createPrintDocumentAdapter(jobName);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {builder.setDuplexMode(PrintAttributes.DUPLEX_MODE_LONG_EDGE);}
+            printManager.print(jobName, printAdapter, builder.build());
+        }
+        else
+        {
+            try
+            {
+                Class<?> printDocumentAdapterClass = Class.forName(
+                        "android.print.PrintDocumentAdapter");
+                Method createPrintDocumentAdapterMethod = webView.getClass()
+                                                                 .getMethod(
+                                                                         "createPrintDocumentAdapter");
+                Object printAdapterObject = createPrintDocumentAdapterMethod.invoke(webView);
+
+                Class<?> printAttributesBuilderClass = Class.forName(
+                        "android.print.PrintAttributes$Builder");
+                Constructor<?> constructor = printAttributesBuilderClass.getConstructor();
+                Object printAttributes = constructor.newInstance();
+                Method buildMethod = printAttributes.getClass().getMethod("build");
+                Object printAttributesBuild = buildMethod.invoke(printAttributes);
+
+                Method printMethod = printManager.getClass()
+                                                 .getMethod("print", String.class,
+                                                            printDocumentAdapterClass,
+                                                            printAttributesBuild.getClass());
+                printMethod.invoke(printManager, jobName, printAdapterObject, builder.build());
+            }
+            catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
+                   IllegalAccessException | InstantiationException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getPrintForm()
+    {
+        String html = "<html><head><style>*{margin:0px; padding:0px}" +
+                      "table,tr,th,td{border: 1px solid black;border-collapse: collapse; font-size: 12px}" +
+                      "th{background-color: #636d72;color:white}td,th{padding:0 4px 0 4px}</style>" +
+                      "</head><body>";
+        html = html.concat("<h3 style='text-align: center'>Yüklənən sənədlər</h3></br>");
+        html = html.concat("<table>");
+        html = html.concat("<tr><th>Sənəd №.</th>");
+        html = html.concat("<th>Tarix</th>");
+        html = html.concat("<th>Sürücü</th>");
+        html = html.concat("<th>Status</th>");
+        html = html.concat("<th>Müştəri kodu</th>");
+        html = html.concat("<th>Müştəri adı</th>");
+        html = html.concat("<th>Təmsilçi kodu</th>");
+        html = html.concat("<th>Təmsilçi adı</th>");
+        for (ShipDoc shipDoc : docList)
+        {
+
+            html = html.concat("<tr><td>" + shipDoc.getTrxNo() + "</td>");
+            html = html.concat("<td nowrap>" + shipDoc.getTrxDate() + "</td>");
+            html = html.concat("<td>" + shipDoc.getDriverName() + "</td>");
+            html = html.concat("<td>" + shipDoc.getShipStatus() + "</td>");
+            html = html.concat("<td>" + shipDoc.getBpCode() + "</td>");
+            html = html.concat("<td>" + shipDoc.getBpName() + "</td>");
+            html = html.concat("<td>" + shipDoc.getSbeCode() + "</td>");
+            html = html.concat("<td>" + shipDoc.getSbeName() + "</td></tr>");
+        }
+
+        html = html.concat("</table></body></head>");
+
+        return html;
     }
 
     private static class DocAdapter extends ArrayAdapter<ShipDoc> implements Filterable
@@ -211,7 +289,10 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
         {
             if (convertView == null)
-                convertView = LayoutInflater.from(context).inflate(R.layout.doc_list_item, parent, false);
+            {
+                convertView = LayoutInflater.from(context)
+                                            .inflate(R.layout.doc_list_item, parent, false);
+            }
 
             ShipDoc doc = docList.get(position);
             TextView docNo = convertView.findViewById(R.id.doc_no);
@@ -243,7 +324,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         {
             return new Filter()
             {
-                private DocListActivity activity = (DocListActivity) context;
+                private final DocListActivity activity = (DocListActivity) context;
 
                 @Override
                 protected FilterResults performFiltering(CharSequence constraint)
@@ -254,9 +335,13 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
                     for (ShipDoc doc : activity.docList)
                     {
-                        if (doc.getTrxNo().concat(doc.getTrxNo()).concat(doc.getBpName())
-                                .concat(doc.getSbeName().concat(doc.getSbeCode()))
-                                .concat(doc.getDriverName()).toLowerCase().contains(constraint))
+                        if (doc.getTrxNo()
+                               .concat(doc.getTrxNo())
+                               .concat(doc.getBpName())
+                               .concat(doc.getSbeName().concat(doc.getSbeCode()))
+                               .concat(doc.getDriverName())
+                               .toLowerCase()
+                               .contains(constraint))
                         {
                             filteredArrayData.add(doc);
                         }
@@ -276,105 +361,5 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
                 }
             };
         }
-    }
-
-    private void print(String html)
-    {
-        WebView webView = new WebView(this);
-        webView.setWebViewClient(new WebViewClient()
-        {
-
-            public boolean shouldOverrideUrlLoading(WebView view, String url)
-            {
-                return false;
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url)
-            {
-                showProgressDialog(false);
-                createWebPrintJob(view);
-            }
-        });
-
-        webView.loadDataWithBaseURL(null, html, "text/HTML", "UTF-8", null);
-    }
-
-    private void createWebPrintJob(WebView webView)
-    {
-        PrintManager printManager = (PrintManager) this
-                .getSystemService(Context.PRINT_SERVICE);
-
-        String jobName = getString(R.string.app_name) + " Document";
-
-        PrintDocumentAdapter printAdapter;
-        PrintAttributes.Builder builder = new PrintAttributes.Builder()
-                .setMediaSize(PrintAttributes.MediaSize.ISO_A4);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
-            printAdapter = webView.createPrintDocumentAdapter(jobName);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                builder.setDuplexMode(PrintAttributes.DUPLEX_MODE_LONG_EDGE);
-            printManager.print(jobName, printAdapter, builder.build());
-        }
-        else
-        {
-            try
-            {
-
-                Class<?> printDocumentAdapterClass = Class.forName("android.print.PrintDocumentAdapter");
-                Method createPrintDocumentAdapterMethod = webView.getClass().getMethod("createPrintDocumentAdapter");
-                Object printAdapterObject = createPrintDocumentAdapterMethod.invoke(webView);
-
-                Class<?> printAttributesBuilderClass = Class.forName("android.print.PrintAttributes$Builder");
-                Constructor<?> constructor = printAttributesBuilderClass.getConstructor();
-                Object printAttributes = constructor.newInstance();
-                Method buildMethod = printAttributes.getClass().getMethod("build");
-                Object printAttributesBuild = buildMethod.invoke(printAttributes);
-
-                Method printMethod = printManager.getClass().getMethod("print", String.class, printDocumentAdapterClass, printAttributesBuild.getClass());
-                printMethod.invoke(printManager, jobName, printAdapterObject, builder.build());
-            }
-            catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private String getPrintForm()
-    {
-        String html = "<html><head><style>*{margin:0px; padding:0px}" +
-                "table,tr,th,td{border: 1px solid black;border-collapse: collapse; font-size: 12px}" +
-                "th{background-color: #636d72;color:white}td,th{padding:0 4px 0 4px}</style>" +
-                "</head><body>";
-        html = html.concat("<h3 style='text-align: center'>Yüklənən sənədlər</h3></br>");
-        html = html.concat("<table>");
-        html = html.concat("<tr><th>Sənəd №.</th>");
-        html = html.concat("<th>Tarix</th>");
-        html = html.concat("<th>Sürücü</th>");
-        html = html.concat("<th>Status</th>");
-        html = html.concat("<th>Müştəri kodu</th>");
-        html = html.concat("<th>Müştəri adı</th>");
-        html = html.concat("<th>Təmsilçi kodu</th>");
-        html = html.concat("<th>Təmsilçi adı</th>");
-        for (ShipDoc shipDoc : docList)
-        {
-
-            html = html.concat("<tr><td>" + shipDoc.getTrxNo() + "</td>");
-            html = html.concat("<td nowrap>" + shipDoc.getTrxDate() + "</td>");
-            html = html.concat("<td>" + shipDoc.getDriverName() + "</td>");
-            html = html.concat("<td>" + shipDoc.getShipStatus() + "</td>");
-            html = html.concat("<td>" + shipDoc.getBpCode() + "</td>");
-            html = html.concat("<td>" + shipDoc.getBpName() + "</td>");
-            html = html.concat("<td>" + shipDoc.getSbeCode() + "</td>");
-            html = html.concat("<td>" + shipDoc.getSbeName() + "</td></tr>");
-        }
-
-        html = html.concat("</table></body></head>");
-
-        return html;
     }
 }

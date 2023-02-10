@@ -12,7 +12,25 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import az.inci.bmslogistic.model.Response;
+import az.inci.bmslogistic.model.ResponseMessage;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 
 public class AppBaseActivity extends AppCompatActivity
 {
@@ -27,6 +45,9 @@ public class AppBaseActivity extends AppCompatActivity
     AlertDialog progressDialog;
     int mode;
     DBHelper dbHelper;
+    Type responseType = new TypeToken<Response>()
+    {}.getType();
+    Gson gson = new Gson();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -71,7 +92,7 @@ public class AppBaseActivity extends AppCompatActivity
     public String url(String... value)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(config().getServerUrl());
+        sb.append(config().getServerUrl()).append("/v2");
         for (String s : value)
         {
             sb.append("/").append(s);
@@ -128,8 +149,173 @@ public class AppBaseActivity extends AppCompatActivity
         int volume = audioManager.getStreamMaxVolume(3);
         sound = soundPool.load(this, resourceId, 1);
         soundPool.setOnLoadCompleteListener((soundPool1, i, i1) ->
+                                                    soundPool.play(sound, volume, volume, 1, 0, 1));
+    }
+
+    okhttp3.Response sendRequest(URL url, String method, @Nullable Object requestBodyData)
+            throws IOException
+    {
+        OkHttpClient httpClient = new OkHttpClient.Builder().connectTimeout(
+                config().getConnectionTimeout(), TimeUnit.SECONDS).build();
+
+        RequestBody requestBody = null;
+
+        if (method.equals("POST"))
         {
-            soundPool.play(sound, volume, volume, 1, 0, 1);
-        });
+            requestBody = RequestBody.create(new Gson().toJson(requestBodyData),
+                                             MediaType.get("application/json;charset=UTF-8"));
+        }
+        Request request = new Request.Builder().method(method, requestBody).url(url).build();
+
+        return httpClient.newCall(request).execute();
+    }
+
+    public void executeUpdate(String urlString, Object requestData,
+                              OnExecuteComplete executeComplete)
+    {
+        new Thread(() -> {
+            try (okhttp3.Response httpResponse = sendRequest(new URL(urlString), "POST",
+                                                             requestData))
+            {
+                ResponseBody responseBody = httpResponse.body();
+                Response response = gson.fromJson(responseBody.string(), responseType);
+                String title;
+                String message;
+                int iconId;
+                if (response.getStatusCode() == 0)
+                {
+                    title = getString(R.string.info);
+                    message = response.getDeveloperMessage();
+                    iconId = android.R.drawable.ic_dialog_info;
+                }
+                else if (response.getStatusCode() == 2)
+                {
+                    title = getString(R.string.error);
+                    message = response.getDeveloperMessage();
+                    iconId = android.R.drawable.ic_dialog_alert;
+                }
+                else
+                {
+                    title = getString(R.string.error);
+                    message = response.getDeveloperMessage() + ": " + response.getSystemMessage();
+                    iconId = android.R.drawable.ic_dialog_alert;
+                }
+
+                ResponseMessage responseMessage = new ResponseMessage();
+                responseMessage.setStatusCode(response.getStatusCode());
+                responseMessage.setTitle(title);
+                responseMessage.setBody(message);
+                responseMessage.setIconId(iconId);
+
+                runOnUiThread(() -> executeComplete.executeComplete(responseMessage));
+            }
+            catch (IOException e)
+            {
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error), e.getMessage(),
+                                      android.R.drawable.ic_dialog_alert);
+                    playSound(SOUND_FAIL);
+                });
+            }
+            finally
+            {
+                runOnUiThread(() -> showProgressDialog(false));
+            }
+        }).start();
+    }
+
+    protected <T> T getSimpleObject(String url, String method, Object request, Class<T> tClass)
+    {
+        try (okhttp3.Response httpResponse = sendRequest(new URL(url), method, request))
+        {
+            ResponseBody responseBody = httpResponse.body();
+            Response response = gson.fromJson(responseBody.string(), responseType);
+            if (response.getStatusCode() == 0)
+            {
+                return gson.fromJson(gson.toJson(response.getData()), tClass);
+            }
+            else if (response.getStatusCode() == 2)
+            {
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error), response.getDeveloperMessage(),
+                                      android.R.drawable.ic_dialog_alert);
+                    playSound(SOUND_FAIL);
+                });
+                return null;
+            }
+            else
+            {
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error),
+                                      response.getDeveloperMessage() + ": " +
+                                      response.getSystemMessage(),
+                                      android.R.drawable.ic_dialog_alert);
+                    playSound(SOUND_FAIL);
+                });
+                return null;
+            }
+        }
+        catch (IOException e)
+        {
+            runOnUiThread(() -> {
+                showMessageDialog(getString(R.string.error),
+                                  getString(R.string.internal_error) + ": " + e.getMessage(),
+                                  android.R.drawable.ic_dialog_alert);
+                playSound(SOUND_FAIL);
+            });
+            return null;
+        }
+        finally
+        {
+            runOnUiThread(() -> showProgressDialog(false));
+        }
+    }
+
+    protected <T> List<T> getListData(String url, String method, Object request, Class<T[]> tClass)
+    {
+        try (okhttp3.Response httpResponse = sendRequest(new URL(url), method, request))
+        {
+            ResponseBody responseBody = httpResponse.body();
+            Response response = gson.fromJson(responseBody.string(), responseType);
+            if (response.getStatusCode() == 0)
+            {
+                return new ArrayList<>(
+                        Arrays.asList(gson.fromJson(gson.toJson(response.getData()), tClass)));
+            }
+            else if (response.getStatusCode() == 2)
+            {
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error), response.getDeveloperMessage(),
+                                      android.R.drawable.ic_dialog_alert);
+                    playSound(SOUND_FAIL);
+                });
+                return null;
+            }
+            else
+            {
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error),
+                                      response.getDeveloperMessage() + ": " +
+                                      response.getSystemMessage(),
+                                      android.R.drawable.ic_dialog_alert);
+                    playSound(SOUND_FAIL);
+                });
+                return null;
+            }
+        }
+        catch (Exception e)
+        {
+            runOnUiThread(() -> {
+                showMessageDialog(getString(R.string.error),
+                                  getString(R.string.internal_error) + ": " + e.getMessage(),
+                                  android.R.drawable.ic_dialog_alert);
+                playSound(SOUND_FAIL);
+            });
+            return null;
+        }
+        finally
+        {
+            runOnUiThread(() -> showProgressDialog(false));
+        }
     }
 }

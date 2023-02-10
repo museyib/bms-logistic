@@ -66,4 +66,5 @@
     <string name="add_new_doc">Yeni sənəd</string>
     <string name="send">Göndər</string>
     <string name="docs_confirmed_successfully">Sənədlər uğurla təsdiqləndi</string>
+    <string name="internal_error">Daxili xəta</string>
 </resources>

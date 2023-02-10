@@ -1,5 +1,7 @@
 package az.inci.bmslogistic;
 
+import static az.inci.bmslogistic.LocationService.UPDATE_INTERVAL_IN_MILLISECONDS;
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -13,6 +15,7 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
@@ -21,19 +24,20 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import com.google.android.gms.location.Priority;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import az.inci.bmslogistic.model.ShipDocInfo;
+import az.inci.bmslogistic.model.UpdateDeliveryRequest;
+import az.inci.bmslogistic.model.UpdateDeliveryRequestItem;
+import az.inci.bmslogistic.model.UpdateDocLocationRequest;
+
 public class DeliveryActivity extends ScannerSupportActivity
 {
-
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationCallback locationCallback;
     LocationRequest locationRequest;
@@ -54,7 +58,6 @@ public class DeliveryActivity extends ScannerSupportActivity
     boolean filled;
     private String trxNo;
     private String note;
-    private String deliverPerson;
     private double targetLatitude;
     private double targetLongitude;
     private double currentLongitude;
@@ -84,11 +87,8 @@ public class DeliveryActivity extends ScannerSupportActivity
         locationCallback = new LocationCallback()
         {
             @Override
-            public void onLocationResult(LocationResult locationResult)
+            public void onLocationResult(@NonNull LocationResult locationResult)
             {
-                if (locationResult == null)
-                    return;
-
                 for (Location location : locationResult.getLocations())
                 {
                     currentLongitude = location.getLongitude();
@@ -129,7 +129,7 @@ public class DeliveryActivity extends ScannerSupportActivity
             Point targetPoint = new Point(targetLongitude, targetLatitude);
 
             if (currentPoint.getDistance(targetPoint) <= 100
-                    || targetCodeEdit.getText().toString().equals("B0013914"))
+                    || targetCodeEdit.getText().toString().equals("B0025210"))
             {
 
                 AlertDialog dialog = new AlertDialog.Builder(this)
@@ -167,98 +167,36 @@ public class DeliveryActivity extends ScannerSupportActivity
         deliverPersonEdit.setEnabled(filled);
     }
 
-    private void checkShipmentValidation(String barcode)
-    {
-        trxNo = barcode;
-        showProgressDialog(true);
-        new Thread(() -> {
-            String url = url("doc", "shipment-is-valid");
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("trx-no", trxNo);
-            url = addRequestParameters(url, parameters);
-            RestTemplate template = new RestTemplate();
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            boolean result;
-            try
-            {
-                result = template.getForObject(url, Boolean.class);
-            }
-            catch (RuntimeException e)
-            {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    showMessageDialog(getString(R.string.error),
-                            getString(R.string.connection_error),
-                            android.R.drawable.ic_dialog_alert);
-                    showProgressDialog(false);
-                });
-                playSound(SOUND_FAIL);
-                return;
-            }
-            if (result) {
-                getShipDetails(trxNo);
-                playSound(SOUND_SUCCESS);
-            } else {
-                runOnUiThread(() -> {
-                    showMessageDialog(getString(R.string.error),
-                            getString(R.string.not_valid_doc_for_shipping),
-                            android.R.drawable.ic_dialog_alert);
-                    showProgressDialog(false);
-                });
-                playSound(SOUND_FAIL);
-            }
-        }).start();
-    }
-
     private void getShipDetails(String trxNo)
     {
         new Thread(() ->
         {
-            String url = url("logistics", "delivery");
+            String url = url("logistics", "doc-info-for-delivery");
             Map<String, String> parameters = new HashMap<>();
             parameters.put("trx-no", trxNo);
             url = addRequestParameters(url, parameters);
-            RestTemplate template = new RestTemplate();
-            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            String[] result;
-            try
-            {
-                result = template.getForObject(url, String[].class);
-                runOnUiThread(() -> publishResult(result));
-            }
-            catch (RuntimeException ex)
-            {
-                ex.printStackTrace();
-                runOnUiThread(() ->
-                        showMessageDialog(getString(R.string.error),
-                                getString(R.string.connection_error),
-                                android.R.drawable.ic_dialog_alert)
-                );
-            }
-            finally {
-                runOnUiThread(() -> showProgressDialog(false));
-            }
+            ShipDocInfo docInfo = getSimpleObject(url, "GET", null, ShipDocInfo.class);
+            runOnUiThread(() -> publishResult(docInfo));
         }).start();
     }
 
     @Override
-    public void onScanComplete(String trxNo)
+    public void onScanComplete(String barcode)
     {
-        checkShipmentValidation(trxNo);
+        trxNo = barcode;
+        getShipDetails(barcode);
     }
 
-    private void publishResult(String[] result)
+    private void publishResult(ShipDocInfo docInfo)
     {
-        if (result != null)
+        if (docInfo != null)
         {
             trxNoEdit.setText(trxNo);
-            driverCodeEdit.setText(result[0]);
-            driverNameEdit.setText(result[1]);
-            vehicleCodeEdit.setText(result[2]);
+            driverCodeEdit.setText(docInfo.getDriverCode());
+            driverNameEdit.setText(docInfo.getDriverName());
+            vehicleCodeEdit.setText(docInfo.getVehicleCode());
 
-            note = result[3];
+            String note = docInfo.getDeliverNotes();
             if (!note.isEmpty())
             {
                 String[] split = note.split("; ");
@@ -275,12 +213,12 @@ public class DeliveryActivity extends ScannerSupportActivity
             }
             noteEdit.setText(note.equals("null") ? "" : note);
 
-            String targetCode = result[5];
-            String targetName = result[6];
+            String targetCode = docInfo.getTargetCode();
+            String targetName = docInfo.getTargetName();
             targetCodeEdit.setText(targetCode);
             targetNameEdit.setText(targetName);
-            if ((result[7].isEmpty() || result[8].isEmpty())
-                    && !targetCode.equals("B0013914"))
+            if ((docInfo.getLongitude() == 0 || docInfo.getLatitude() == 0)
+                    && !targetCode.equals("B0025210"))
             {
                 showMessageDialog(getString(R.string.info),
                         getString(R.string.not_found_location_for_target),
@@ -290,8 +228,8 @@ public class DeliveryActivity extends ScannerSupportActivity
             else
             {
                 try {
-                    targetLongitude = Double.parseDouble(result[7]);
-                    targetLatitude = Double.parseDouble(result[8]);
+                    targetLongitude = docInfo.getLongitude();
+                    targetLatitude = docInfo.getLatitude();
                 }
                 catch (NumberFormatException e)
                 {
@@ -343,10 +281,9 @@ public class DeliveryActivity extends ScannerSupportActivity
 
     protected void createLocationRequest()
     {
-        locationRequest = LocationRequest.create();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(500);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest = new LocationRequest.Builder(UPDATE_INTERVAL_IN_MILLISECONDS)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .build();
     }
 
     private void changeDocStatus()
@@ -357,88 +294,40 @@ public class DeliveryActivity extends ScannerSupportActivity
             note = "İstifadəçi: " + config().getUser().getId();
             if (!noteEdit.getText().toString().isEmpty())
                 note += "; Qeyd: " + noteEdit.getText().toString();
-            deliverPerson = deliverPersonEdit.getText().toString();
+            String deliverPerson = deliverPersonEdit.getText().toString();
 
             String url = url("logistics", "change-doc-status");
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("trx-no", trxNo);
-            parameters.put("status", "MC");
-            parameters.put("note", note);
-            parameters.put("deliver-person", deliverPerson);
-            url = addRequestParameters(url, parameters);
-
-            RestTemplate template = new RestTemplate();
-            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
-            template.getMessageConverters().add(new StringHttpMessageConverter());
-            boolean result;
-            try
-            {
-                result = template.postForObject(url, null, Boolean.class);
-                runOnUiThread(() -> onPostExecute(result));
-            }
-            catch (RuntimeException ex)
-            {
-                ex.printStackTrace();
-                showMessageDialog(getString(R.string.error), getString(R.string.connection_error),
-                        android.R.drawable.ic_dialog_alert);
-            }
-            finally
-            {
-                runOnUiThread(() -> showProgressDialog(false));
-            }
+            UpdateDeliveryRequest request = new UpdateDeliveryRequest();
+            UpdateDeliveryRequestItem requestItem = new UpdateDeliveryRequestItem();
+            requestItem.setTrxNo(trxNo);
+            requestItem.setNote(note);
+            requestItem.setDeliverPerson(deliverPerson);
+            requestItem.setDriverCode(driverCodeEdit.getText().toString());
+            request.setStatus("MC");
+            request.setRequestItems(Collections.singletonList(requestItem));
+            executeUpdate(url, request, message -> {
+                if (message.getStatusCode() == 0)
+                {
+                    showMessageDialog(message.getTitle(), message.getBody(), message.getIconId());
+                    clearFields();
+                }
+            });
         }).start();
     }
-
-    private void onPostExecute(boolean result)
-    {
-        String message;
-        String title;
-        int icon;
-        if (result)
-        {
-            title = getString(R.string.info);
-            message = getString(R.string.doc_confirmed_successfully);
-            icon = android.R.drawable.ic_dialog_info;
-        }
-        else
-        {
-            title = getString(R.string.error);
-            message = getString(R.string.server_error);
-            icon = android.R.drawable.ic_dialog_alert;
-        }
-        showMessageDialog(title, message, icon);
-    }
-
 
     private void updateDocLocation(String address)
     {
         new Thread(() ->
         {
-            note = "İstifadəçi: " + config().getUser().getId();
-            if (!noteEdit.getText().toString().isEmpty())
-                note += "; Qeyd: " + noteEdit.getText().toString();
-            deliverPerson = deliverPersonEdit.getText().toString();
-
             String url = url("logistics", "update-location");
-            RestTemplate template = new RestTemplate();
-            ((SimpleClientHttpRequestFactory) template.getRequestFactory())
-                    .setConnectTimeout(config().getConnectionTimeout() * 1000);
-            template.getMessageConverters().add(new StringHttpMessageConverter());
+            UpdateDocLocationRequest request = new UpdateDocLocationRequest();
+            request.setLongitude(currentLongitude);
+            request.setLatitude(currentLatitude);
+            request.setAddress(address);
+            request.setUserId(config().getUser().getId());
+            executeUpdate(url, request, message -> {
 
-            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
-                    .queryParam("latitude", currentLatitude)
-                    .queryParam("aptitude", currentLongitude)
-                    .queryParam("address", address)
-                    .queryParam("user-id", config().getUser().getId());
-            try
-            {
-                template.postForObject(builder.toUriString(), null, Boolean.class);
-            }
-            catch (RuntimeException ex)
-            {
-                ex.printStackTrace();
-            }
+            });
         }).start();
     }
 

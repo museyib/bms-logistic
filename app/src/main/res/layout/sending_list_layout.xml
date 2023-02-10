@@ -1,76 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <EditText
-        android:id="@+id/driver"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_margin="5dp"
-        android:ems="10"
-        android:enabled="false"
-        android:hint="@string/driver"
-        android:importantForAutofill="no"
-        android:inputType="textPersonName"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="DuplicateSpeakableTextCheck" />
+            android:id="@+id/driver"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_margin="5dp"
+            android:ems="10"
+            android:enabled="false"
+            android:hint="@string/driver"
+            android:importantForAutofill="no"
+            android:inputType="textPersonName"
+            android:textColor="@android:color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="DuplicateSpeakableTextCheck" />
+
+    <TextView
+            android:id="@+id/driver_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:ems="10"
+            android:enabled="false"
+            android:textColor="@android:color/black"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/driver" />
 
     <Button
-        android:id="@+id/scan_driver_code"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_margin="5dp"
-        android:contentDescription="@string/driver"
-        android:text="@string/scan"
-        app:layout_constraintStart_toEndOf="@id/driver"
-        app:layout_constraintTop_toTopOf="parent" />
+            android:id="@+id/scan_driver_code"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_margin="5dp"
+            android:contentDescription="@string/driver"
+            android:text="@string/scan"
+            app:layout_constraintStart_toEndOf="@id/driver"
+            app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/scan_new_doc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/add_new_doc"
-        app:layout_constraintEnd_toEndOf="@id/ship_trx_list_view"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/driver" />
+            android:id="@+id/scan_new_doc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/add_new_doc"
+            app:layout_constraintEnd_toEndOf="@id/ship_trx_list_view"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/driver_name" />
 
     <ImageButton
-        android:id="@+id/send"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/send"
-        app:layout_constraintEnd_toStartOf="@+id/scan_new_doc"
-        app:layout_constraintHorizontal_bias="0.06"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/driver"
-        app:srcCompat="@android:drawable/ic_menu_upload"
-        tools:ignore="ImageContrastCheck" />
+            android:id="@+id/send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/send"
+            app:layout_constraintEnd_toStartOf="@+id/scan_new_doc"
+            app:layout_constraintHorizontal_bias="0.06"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/driver_name"
+            app:srcCompat="@android:drawable/ic_menu_upload"
+            tools:ignore="ImageContrastCheck" />
 
     <Button
-        android:id="@+id/cancel_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/cancel"
-        app:layout_constraintEnd_toStartOf="@+id/scan_new_doc"
-        app:layout_constraintTop_toBottomOf="@id/driver" />
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            app:layout_constraintEnd_toStartOf="@+id/scan_new_doc"
+            app:layout_constraintTop_toBottomOf="@id/driver_name" />
 
     <ListView
-        android:id="@+id/ship_trx_list_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="180dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/send" />
+            android:id="@+id/ship_trx_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="180dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/send" />
 
     <include
-        layout="@layout/footer_layout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/doc_list" />
+            layout="@layout/footer_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/doc_list" />
 </androidx.constraintlayout.widget.ConstraintLayout>
