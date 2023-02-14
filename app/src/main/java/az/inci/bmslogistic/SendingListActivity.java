@@ -110,15 +110,9 @@ public class SendingListActivity extends ScannerSupportActivity
         this.barcode = barcode;
 
         if (docCreated)
-        {
             getShipDetails(barcode);
-        }
         else
-        {
             setDriverCode(barcode);
-
-            docCreated = true;
-        }
     }
 
     @Override
@@ -159,6 +153,8 @@ public class SendingListActivity extends ScannerSupportActivity
                     runOnUiThread(() -> {
                         if (!perName.isEmpty())
                         {
+
+                            docCreated = true;
                             this.driverCode = driverCode;
                             driverCodeEditText.setText(driverCode);
                             ((TextView) findViewById(R.id.driver_name)).setText(perName);
