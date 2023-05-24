@@ -1,5 +1,8 @@
 package az.inci.bmslogistic;
 
+import static az.inci.bmslogistic.GlobalParameters.connectionTimeout;
+import static az.inci.bmslogistic.GlobalParameters.serviceUrl;
+
 import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -43,7 +46,7 @@ import okhttp3.RequestBody;
 public class LocationService extends Service
 {
     public static final String CHANNEL_ID = "location";
-    static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 60000;
     private final LocationCallback locationCallback = new LocationCallback()
     {
         @Override
@@ -97,7 +100,7 @@ public class LocationService extends Service
             throws IOException
     {
         OkHttpClient httpClient = new OkHttpClient.Builder().connectTimeout(
-                ((App) getApplication()).getConfig().getConnectionTimeout(), TimeUnit.SECONDS).build();
+                connectionTimeout, TimeUnit.SECONDS).build();
 
         RequestBody requestBody = RequestBody.create(new Gson().toJson(requestBodyData),
                                                      MediaType.get(
@@ -123,7 +126,7 @@ public class LocationService extends Service
     public String url(String... value)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(((App) getApplication()).getConfig().getServerUrl()).append("/v2");
+        sb.append(serviceUrl).append("/v3");
         for (String s : value)
         {
             sb.append("/").append(s);

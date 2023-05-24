@@ -11,9 +11,6 @@ import java.util.Objects;
 
 public class DBHelper extends SQLiteOpenHelper
 {
-
-    public static final String LAST_LOGIN = "LAST_LOGIN";
-    public static final String CONFIG = "CONFIG";
     public static final String TERMINAL_USER = "TERMINAL_USER";
     public static final String USER_ID = "USER_ID";
     public static final String USER_NAME = "USER_NAME";
@@ -26,12 +23,10 @@ public class DBHelper extends SQLiteOpenHelper
     public static final String PACK_FLAG = "PACK_FLAG";
     public static final String DOC_FLAG = "DOC_FLAG";
     public static final String LOADING_FLAG = "LOADING_FLAG";
-    public static final String NAME = "NAME";
-    public static final String VALUE = "VALUE";
 
     private SQLiteDatabase db;
 
-    DBHelper(Context context)
+    public DBHelper(Context context)
     {
         super(context, Objects.requireNonNull(context.getExternalFilesDir("/"))
                 .getPath() + "/" + AppConfig.DB_NAME, null, AppConfig.DB_VERSION);
@@ -41,8 +36,6 @@ public class DBHelper extends SQLiteOpenHelper
     public void onCreate(SQLiteDatabase db)
     {
         createUserTable(db);
-        createConfigTable(db);
-        createLastLoginTable(db);
     }
 
     @Override
@@ -57,7 +50,7 @@ public class DBHelper extends SQLiteOpenHelper
         onCreate(db);
     }
 
-    void open() throws SQLException
+    public void open() throws SQLException
     {
         db = getWritableDatabase();
     }
@@ -91,7 +84,7 @@ public class DBHelper extends SQLiteOpenHelper
                 .toString());
     }
 
-    void addUser(User user)
+    public void addUser(User user)
     {
         db.delete(TERMINAL_USER, USER_ID + "=?", new String[]{user.getId()});
 
@@ -99,19 +92,19 @@ public class DBHelper extends SQLiteOpenHelper
         values.put(USER_ID, user.getId());
         values.put(USER_NAME, user.getName());
         values.put(PASS_WORD, user.getPassword());
-        values.put(COLLECT_FLAG, user.isCollect() ? 1 : 0);
-        values.put(PICK_FLAG, user.isPick() ? 1 : 0);
-        values.put(CHECK_FLAG, user.isCheck() ? 1 : 0);
-        values.put(COUNT_FLAG, user.isCount() ? 1 : 0);
-        values.put(LOCATION_FLAG, user.isLocation() ? 1 : 0);
-        values.put(PACK_FLAG, user.isPack() ? 1 : 0);
-        values.put(DOC_FLAG, user.isDoc() ? 1 : 0);
-        values.put(LOADING_FLAG, user.isLoading() ? 1 : 0);
+        values.put(COLLECT_FLAG, user.isCollectFlag() ? 1 : 0);
+        values.put(PICK_FLAG, user.isPickFlag() ? 1 : 0);
+        values.put(CHECK_FLAG, user.isCheckFlag() ? 1 : 0);
+        values.put(COUNT_FLAG, user.isCountFlag() ? 1 : 0);
+        values.put(LOCATION_FLAG, user.isLocationFlag() ? 1 : 0);
+        values.put(PACK_FLAG, user.isPackFlag() ? 1 : 0);
+        values.put(DOC_FLAG, user.isDocFlag() ? 1 : 0);
+        values.put(LOADING_FLAG, user.isLoadingFlag() ? 1 : 0);
 
         db.insert(TERMINAL_USER, null, values);
     }
 
-    User getUser(String id)
+    public User getUser(String id)
     {
         String[] columns = new String[]{USER_ID, USER_NAME, PASS_WORD, COLLECT_FLAG,
                 PICK_FLAG, CHECK_FLAG, COUNT_FLAG, LOCATION_FLAG, PACK_FLAG, DOC_FLAG, LOADING_FLAG};
@@ -137,76 +130,5 @@ public class DBHelper extends SQLiteOpenHelper
             }
         }
         return user;
-    }
-
-    private void createConfigTable(SQLiteDatabase db)
-    {
-        db.execSQL("DROP TABLE IF EXISTS " + CONFIG);
-        db.execSQL("CREATE TABLE CONFIG (NAME TEXT, VALUE TEXT)");
-    }
-
-    public String getParameter(String name)
-    {
-        String value = "";
-
-        Cursor cursor = db.rawQuery("SELECT VALUE FROM CONFIG WHERE NAME=?", new String[]{name});
-        if (cursor.moveToFirst())
-        {
-            value = cursor.getString(0);
-        }
-
-        cursor.close();
-
-        return value;
-    }
-
-    public void updateParameter(String name, String value)
-    {
-        ContentValues values = new ContentValues();
-        values.put(NAME, name);
-        values.put(VALUE, value);
-        try
-        {
-            db.delete(CONFIG, NAME + "=?", new String[]{name});
-            db.insert(CONFIG, null, values);
-        }
-        catch (SQLException e)
-        {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void createLastLoginTable(SQLiteDatabase db)
-    {
-        db.execSQL("DROP TABLE IF EXISTS " + LAST_LOGIN);
-        db.execSQL("CREATE TABLE LAST_LOGIN (USER_ID TEXT, PASS_WORD TEXT)");
-    }
-
-    public void updateLastLogin(String userId, String password)
-    {
-        db.delete(LAST_LOGIN, USER_ID + "=?", new String[]{userId});
-
-        ContentValues values = new ContentValues();
-        values.put(USER_ID, userId);
-        values.put(PASS_WORD, password);
-
-        db.insert(LAST_LOGIN, null, values);
-    }
-
-    public String[] getLastLogin()
-    {
-        String[] result = new String[2];
-        Cursor cursor = db.rawQuery("SELECT * FROM LAST_LOGIN", null);
-
-        if (cursor.moveToLast())
-        {
-            result[0] = cursor.getString(0);
-            result[1] = cursor.getString(1);
-        }
-
-        cursor.close();
-
-        return result;
     }
 }

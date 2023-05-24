@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <EditTextPreference
+            app:key="service_url"
+            app:title="@string/service_url"
+            app:defaultValue="http://185.129.0.46:8022" />
+
+    <EditTextPreference
+            app:key="connection_timeout"
+            app:title="@string/connection_timeout"
+            app:defaultValue="5" />
+
+    <CheckBoxPreference
+            app:key="camera_scanning"
+            app:title="@string/camera_scanner"
+            app:defaultValue="false" />
+</PreferenceScreen>

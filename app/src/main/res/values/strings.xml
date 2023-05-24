@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">BMS Logistic</string>
     <string name="parameters">Parametrlər</string>
-    <string name="server_url">Server URL</string>
+    <string name="service_url">Servis linki</string>
     <string name="connection_timeout">Qoşulma vaxtı limiti (saniyə)</string>
     <string name="error">Xəta</string>
     <string name="connection_error">Bağlantı problemi</string>
@@ -67,4 +67,10 @@
     <string name="send">Göndər</string>
     <string name="docs_confirmed_successfully">Sənədlər uğurla təsdiqləndi</string>
     <string name="internal_error">Daxili xəta</string>
+    <string name="camera_scanner">Kamera skanner</string>
+    <string name="update_version">Proqram versiyasını yenilə</string>
+    <string name="want_to_update">Yeniləmək istəyirsinizmi?</string>
+    <string name="yes">Bəli</string>
+    <string name="no">Xeyr</string>
+    <string name="want_to_confirm">Təsdiqləmək istəyirsinizmi?</string>
 </resources>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="az.inci.bmslogistic.DocListActivity">
+    tools:context="az.inci.bmslogistic.activity.DocListActivity">
 
     <TableRow
         android:id="@+id/tableRow"
