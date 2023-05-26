@@ -55,7 +55,7 @@ public class LocationService extends Service
             super.onLocationResult(locationResult);
             Location currentLocation = locationResult.getLastLocation();
             new Thread(() -> {
-                if (currentLocation != null)
+                if(currentLocation != null)
                 {
                     sendLocation(currentLocation.getLatitude(), currentLocation.getLongitude());
                 }
@@ -82,7 +82,7 @@ public class LocationService extends Service
             List<Address> addressList = geocoder.getFromLocation(lat, apt, 1);
             address = addressList.get(0).getAddressLine(0);
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }
@@ -112,12 +112,12 @@ public class LocationService extends Service
 
     public void executeUpdate(String urlString, Object requestData)
     {
-        try (okhttp3.Response httpResponse = sendRequest(new URL(urlString),
-                                                         requestData))
+        try(okhttp3.Response httpResponse = sendRequest(new URL(urlString),
+                                                        requestData))
         {
             Log.i("INFO", httpResponse.toString());
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }
@@ -127,7 +127,7 @@ public class LocationService extends Service
     {
         StringBuilder sb = new StringBuilder();
         sb.append(serviceUrl).append("/v3");
-        for (String s : value)
+        for(String s : value)
         {
             sb.append("/").append(s);
         }
@@ -145,20 +145,21 @@ public class LocationService extends Service
 
     private void startLocationUpdates()
     {
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        if(ActivityCompat.checkSelfPermission(this,
+                                              Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+           || ActivityCompat.checkSelfPermission(this,
+                                                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             fusedLocationProviderClient
-                    .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+                    .requestLocationUpdates(locationRequest, locationCallback,
+                                            Looper.getMainLooper());
         }
     }
 
     private void prepareForegroundNotification()
     {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
@@ -167,7 +168,8 @@ public class LocationService extends Service
             );
             Intent notificationIntent = new Intent(this, LocationService.class);
             PendingIntent pendingIntent =
-                    PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+                    PendingIntent.getActivity(this, 0, notificationIntent,
+                                              PendingIntent.FLAG_IMMUTABLE);
             notification = new Notification.Builder(this, CHANNEL_ID)
                     .setContentTitle(getText(R.string.app_name))
                     .setContentText("Location")
@@ -194,7 +196,8 @@ public class LocationService extends Service
                 .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .build();
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
+                getApplicationContext());
 
     }
 

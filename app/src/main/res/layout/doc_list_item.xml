@@ -1,118 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableRow xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/trx_no"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/trx_no"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/trx_date"
-        android:layout_width="75dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/trx_date"
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/driver_name"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/driver_name"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/bp_code"
-        android:layout_width="70dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/bp_code"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/bp_name"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/bp_name"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/sbe_code"
-        android:layout_width="60dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/sbe_code"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/sbe_name"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/sbe_name"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/doc_no"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/doc_no"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 
     <TextView
-        android:id="@+id/ship_status"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:textColor="@android:color/black" />
+            android:id="@+id/ship_status"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:textColor="@android:color/black" />
 
     <View
-        android:layout_width="3dp"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/black" />
 </TableRow>

@@ -29,7 +29,7 @@ public class DBHelper extends SQLiteOpenHelper
     public DBHelper(Context context)
     {
         super(context, Objects.requireNonNull(context.getExternalFilesDir("/"))
-                .getPath() + "/" + AppConfig.DB_NAME, null, AppConfig.DB_VERSION);
+                              .getPath() + "/" + AppConfig.DB_NAME, null, AppConfig.DB_VERSION);
     }
 
     @Override
@@ -68,20 +68,20 @@ public class DBHelper extends SQLiteOpenHelper
         db.execSQL("DROP TABLE IF EXISTS " + TERMINAL_USER);
 
         db.execSQL(sb.append("CREATE TABLE ")
-                .append(TERMINAL_USER).append("(")
-                .append(USER_ID).append(" TEXT,")
-                .append(USER_NAME).append(" TEXT,")
-                .append(PASS_WORD).append(" TEXT,")
-                .append(COLLECT_FLAG).append(" INTEGER,")
-                .append(PICK_FLAG).append(" INTEGER,")
-                .append(CHECK_FLAG).append(" INTEGER,")
-                .append(COUNT_FLAG).append(" INTEGER,")
-                .append(LOCATION_FLAG).append(" INTEGER,")
-                .append(PACK_FLAG).append(" INTEGER,")
-                .append(DOC_FLAG).append(" INTEGER,")
-                .append(LOADING_FLAG).append(" INTEGER")
-                .append(")")
-                .toString());
+                     .append(TERMINAL_USER).append("(")
+                     .append(USER_ID).append(" TEXT,")
+                     .append(USER_NAME).append(" TEXT,")
+                     .append(PASS_WORD).append(" TEXT,")
+                     .append(COLLECT_FLAG).append(" INTEGER,")
+                     .append(PICK_FLAG).append(" INTEGER,")
+                     .append(CHECK_FLAG).append(" INTEGER,")
+                     .append(COUNT_FLAG).append(" INTEGER,")
+                     .append(LOCATION_FLAG).append(" INTEGER,")
+                     .append(PACK_FLAG).append(" INTEGER,")
+                     .append(DOC_FLAG).append(" INTEGER,")
+                     .append(LOADING_FLAG).append(" INTEGER")
+                     .append(")")
+                     .toString());
     }
 
     public void addUser(User user)
@@ -110,10 +110,10 @@ public class DBHelper extends SQLiteOpenHelper
                 PICK_FLAG, CHECK_FLAG, COUNT_FLAG, LOCATION_FLAG, PACK_FLAG, DOC_FLAG, LOADING_FLAG};
         User user = null;
 
-        try (Cursor cursor = db.query(TERMINAL_USER, columns,
-                "USER_ID=?", new String[]{id.toUpperCase()}, null, null, null))
+        try(Cursor cursor = db.query(TERMINAL_USER, columns,
+                                     "USER_ID=?", new String[]{id.toUpperCase()}, null, null, null))
         {
-            if (cursor.moveToNext())
+            if(cursor.moveToNext())
             {
                 user = new User();
                 user.setId(cursor.getString(0));

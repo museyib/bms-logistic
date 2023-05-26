@@ -70,7 +70,7 @@ public class BarcodeScannerCamera extends AppBaseActivity
             backgroundThread = null;
             backgroundHandler = null;
         }
-        catch (InterruptedException e)
+        catch(InterruptedException e)
         {
             showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
         }
@@ -83,7 +83,7 @@ public class BarcodeScannerCamera extends AppBaseActivity
         try
         {
             String cameraId = manager.getCameraIdList()[0];
-            if (checkCameraPermission())
+            if(checkCameraPermission())
             {
                 startCameraSource();
                 manager.openCamera(cameraId, stateCallback, backgroundHandler);
@@ -92,7 +92,7 @@ public class BarcodeScannerCamera extends AppBaseActivity
             else
                 requestCameraPermission();
         }
-        catch (CameraAccessException e)
+        catch(CameraAccessException e)
         {
             showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
         }
@@ -100,7 +100,7 @@ public class BarcodeScannerCamera extends AppBaseActivity
 
     private void closeCamera()
     {
-        if (cameraDevice != null)
+        if(cameraDevice != null)
         {
             cameraDevice.close();
             cameraDevice = null;
@@ -141,12 +141,12 @@ public class BarcodeScannerCamera extends AppBaseActivity
             {
                 try
                 {
-                    if (checkCameraPermission())
+                    if(checkCameraPermission())
                         cameraSource.start(surfaceView.getHolder());
                     else
                         requestCameraPermission();
                 }
-                catch (IOException e)
+                catch(IOException e)
                 {
                     showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
                 }
@@ -200,7 +200,7 @@ public class BarcodeScannerCamera extends AppBaseActivity
             public void receiveDetections(@NonNull Detections<Barcode> detections)
             {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
-                if (barcodes.size() != 0)
+                if(barcodes.size() != 0)
                 {
                     String barcode = barcodes.valueAt(0).displayValue;
                     onScanComplete(barcode);
@@ -224,9 +224,9 @@ public class BarcodeScannerCamera extends AppBaseActivity
                                            @NonNull int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CAMERA_PERMISSION)
+        if(requestCode == CAMERA_PERMISSION)
         {
-            if (grantResults[0] == PERMISSION_DENIED)
+            if(grantResults[0] == PERMISSION_DENIED)
                 finish();
             else
                 openCamera();

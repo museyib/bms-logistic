@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.device.ScanManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
 
@@ -19,22 +18,14 @@ import androidx.annotation.Nullable;
 import com.rscja.deviceapi.DeviceConfiguration;
 import com.zebra.adc.decoder.Barcode2DWithSoft;
 
-import az.inci.bmslogistic.ScanTask;
-
 public abstract class ScannerSupportActivity extends AppBaseActivity
 {
 
+    public Barcode2DWithSoft barcode2DWithSoft;
     protected String model;
     protected boolean isContinuous = false;
-
     protected ScanManager scanManager;
-    public Barcode2DWithSoft barcode2DWithSoft;
-    protected ScanTask scanTask;
-    protected boolean busy = false;
-    protected boolean isUrovoOpen = false;
-    protected Barcode2DWithSoft.ScanCallback s98ScanCallback;
-    ActivityResultLauncher<Integer> barcodeResultLauncher = barcodeResultLauncher();
-
+    protected boolean scannerBusy = false;
     private final BroadcastReceiver urovoScanReceiver = new BroadcastReceiver()
     {
         public void onReceive(Context context, Intent intent)
@@ -43,9 +34,12 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
             int length = intent.getIntExtra(ScanManager.BARCODE_LENGTH_TAG, 0);
             String barcode = new String(barcodeArray, 0, length);
             onScanComplete(barcode);
-            busy = false;
+            scannerBusy = false;
         }
     };
+    protected boolean isUrovoOpen = false;
+    protected boolean isS98Open = false;
+    ActivityResultLauncher<Integer> barcodeResultLauncher = barcodeResultLauncher();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -65,7 +59,7 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
             filter.addAction(ScanManager.ACTION_DECODE);
             registerReceiver(urovoScanReceiver, filter);
         }
-        catch (RuntimeException e)
+        catch(RuntimeException e)
         {
             e.printStackTrace();
         }
@@ -73,20 +67,18 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
 
     private void toggleUrovoScanner()
     {
-        if (!isUrovoOpen)
-        {
+        if(!isUrovoOpen)
             initUrovoScanner();
-        }
 
-        if (!busy)
+        if(!scannerBusy)
         {
             scanManager.startDecode();
-            busy = true;
+            scannerBusy = true;
         }
         else
         {
             scanManager.stopDecode();
-            busy = false;
+            scannerBusy = false;
         }
     }
 
@@ -95,71 +87,67 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
         try
         {
             barcode2DWithSoft = Barcode2DWithSoft.getInstance();
+
+            if(barcode2DWithSoft.open(this))
+                setS98ScanCallback();
         }
-        catch (Throwable e)
+        catch(Exception e)
         {
             e.printStackTrace();
         }
-        scanTask = new ScanTask(this);
-        scanTask.execute();
         model = DeviceConfiguration.getModel();
-
-        s98ScanCallback = (i, i2, bArr) ->
-        {
-            if (bArr != null)
-            {
-                String barcode = new String(bArr, 0, i2);
-                onScanComplete(barcode);
-                if (!isContinuous)
-                {
-                    busy = false;
-                }
-            }
-        };
     }
 
     private void toggleS98Scanner()
     {
-        if (!busy)
+        if(!scannerBusy)
         {
-            busy = true;
-            scan();
+            scannerBusy = true;
+            isS98Open = true;
+            s98Scan();
         }
         else
         {
-            busy = false;
+            scannerBusy = false;
+            isS98Open = false;
             barcode2DWithSoft.stopScan();
         }
     }
 
     private void stopScan()
     {
+        stopUrovoScan();
+        stopS98Scan();
+    }
+
+    private void stopUrovoScan()
+    {
         isUrovoOpen = false;
         try
         {
-            if (scanManager != null && scanManager.getScannerState())
+            if(scanManager != null && scanManager.getScannerState())
             {
                 scanManager.closeScanner();
                 unregisterReceiver(urovoScanReceiver);
             }
         }
-        catch (RuntimeException e)
+        catch(RuntimeException e)
         {
             e.printStackTrace();
         }
+    }
 
-        if (scanTask.getStatus() == AsyncTask.Status.FINISHED && barcode2DWithSoft != null && model.equals("C4000_6582"))
-        {
+    private void stopS98Scan()
+    {
+        if(!isS98Open && barcode2DWithSoft != null && model.equals("C4000_6582"))
             try
             {
                 barcode2DWithSoft.close();
-                scanTask.cancel(true);
             }
-            catch (IllegalArgumentException e)
+            catch(IllegalArgumentException e)
             {
                 e.printStackTrace();
             }
-        }
     }
 
     public abstract void onScanComplete(String barcode);
@@ -167,10 +155,8 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
-        if (keyCode == 139)
-            toggleS98Scanner();
-        if (keyCode == 520 || keyCode == 521 || keyCode == 522)
-            toggleUrovoScanner();
+        if(keyCode == 139) toggleS98Scanner();
+        if(keyCode == 520 || keyCode == 521 || keyCode == 522) toggleUrovoScanner();
         return super.onKeyDown(keyCode, event);
     }
 
@@ -195,31 +181,26 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
         stopScan();
     }
 
-    public void setScanCallback()
+    public void setS98ScanCallback()
     {
-        if (barcode2DWithSoft != null)
-        {
-            barcode2DWithSoft.setScanCallback(s98ScanCallback);
-        }
+        if(barcode2DWithSoft != null)
+            barcode2DWithSoft.setScanCallback((symbology, length, dataBytes) -> {
+                if(dataBytes != null)
+                {
+                    String barcode = new String(dataBytes, 0, length);
+                    onScanComplete(barcode);
+                    if(!isContinuous)
+                        scannerBusy = false;
+                }
+            });
     }
 
-    private synchronized void scan()
+    private synchronized void s98Scan()
     {
-        synchronized (this)
+        synchronized(this)
         {
-            if (barcode2DWithSoft != null)
-            {
-                ScanThread thread = new ScanThread();
-                thread.start();
-            }
-        }
-    }
-
-    private class ScanThread extends Thread
-    {
-        public void run()
-        {
-            barcode2DWithSoft.scan();
+            if(barcode2DWithSoft != null)
+                new Thread(() -> barcode2DWithSoft.scan()).start();
         }
     }
 
@@ -239,12 +220,12 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
                     public String parseResult(int resultCode, @Nullable Intent intent)
                     {
                         String scanResult = "";
-                        if (intent != null) scanResult = intent.getStringExtra("barcode");
+                        if(intent != null) scanResult = intent.getStringExtra("barcode");
 
                         return scanResult;
                     }
                 }, barcode -> {
-                    if (!isEmpty(barcode)) onScanComplete(barcode);
+                    if(!isEmpty(barcode)) onScanComplete(barcode);
                 });
     }
 }

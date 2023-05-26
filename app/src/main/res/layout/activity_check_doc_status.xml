@@ -1,171 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="az.inci.bmslogistic.activity.SendingActivity">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="az.inci.bmslogistic.activity.SendingActivity">
 
     <Button
-        android:id="@+id/scan_cam"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/scan"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            android:id="@+id/scan_cam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/scan"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     <TableLayout
-        android:id="@+id/tableLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/scan_cam">
+            android:id="@+id/tableLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/scan_cam">
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/trx_no_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/trx_no" />
+                    android:id="@+id/trx_no_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/trx_no" />
 
             <EditText
-                android:id="@+id/trx_no"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:autofillHints="@string/trx_no"
-                android:ems="10"
-                android:enabled="false"
-                android:hint="@string/trx_no"
-                android:inputType="textPersonName"
-                android:textColor="@android:color/black" />
+                    android:id="@+id/trx_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints="@string/trx_no"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:hint="@string/trx_no"
+                    android:inputType="textPersonName"
+                    android:textColor="@android:color/black" />
         </TableRow>
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/driver_code_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/driver_code" />
+                    android:id="@+id/driver_code_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/driver_code" />
 
             <EditText
-                android:id="@+id/driver_code"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:autofillHints="@string/driver_code"
-                android:ems="10"
-                android:enabled="false"
-                android:hint="@string/driver_code"
-                android:inputType="textPersonName"
-                android:textColor="@android:color/black" />
+                    android:id="@+id/driver_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints="@string/driver_code"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:hint="@string/driver_code"
+                    android:inputType="textPersonName"
+                    android:textColor="@android:color/black" />
         </TableRow>
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/driver_name_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/driver_name" />
+                    android:id="@+id/driver_name_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/driver_name" />
 
             <EditText
-                android:id="@+id/driver_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:autofillHints="@string/driver_name"
-                android:ems="10"
-                android:enabled="false"
-                android:hint="@string/driver_name"
-                android:inputType="textPersonName"
-                android:textColor="@android:color/black" />
+                    android:id="@+id/driver_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints="@string/driver_name"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:hint="@string/driver_name"
+                    android:inputType="textPersonName"
+                    android:textColor="@android:color/black" />
         </TableRow>
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/vehicle_code_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/vehicle_code" />
+                    android:id="@+id/vehicle_code_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vehicle_code" />
 
             <EditText
-                android:id="@+id/vehicle_code"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:autofillHints="@string/vehicle_code"
-                android:ems="10"
-                android:enabled="false"
-                android:hint="@string/vehicle_code"
-                android:inputType="textPersonName"
-                android:textColor="@android:color/black" />
+                    android:id="@+id/vehicle_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints="@string/vehicle_code"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:hint="@string/vehicle_code"
+                    android:inputType="textPersonName"
+                    android:textColor="@android:color/black" />
         </TableRow>
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:layout_editor_absoluteY="48dp">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout_editor_absoluteY="48dp">
 
             <TextView
-                android:id="@+id/status_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/status" />
+                    android:id="@+id/status_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/status" />
 
             <EditText
-                android:id="@+id/status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:autofillHints="@string/status"
-                android:ems="10"
-                android:enabled="false"
-                android:hint="@string/status"
-                android:inputType="textMultiLine"
-                android:textColor="@android:color/black" />
+                    android:id="@+id/status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints="@string/status"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:hint="@string/status"
+                    android:inputType="textMultiLine"
+                    android:textColor="@android:color/black" />
         </TableRow>
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/note_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/note" />
+                    android:id="@+id/note_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/note" />
 
             <EditText
-                android:id="@+id/note"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:autofillHints="@string/note"
-                android:ems="10"
-                android:enabled="false"
-                android:hint="@string/note"
-                android:inputType="textMultiLine"
-                android:textColor="@android:color/black" />
+                    android:id="@+id/note"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints="@string/note"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:hint="@string/note"
+                    android:inputType="textMultiLine"
+                    android:textColor="@android:color/black" />
         </TableRow>
 
     </TableLayout>
 
     <include
-        android:id="@+id/footer"
-        layout="@layout/footer_layout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
+            android:id="@+id/footer"
+            layout="@layout/footer_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

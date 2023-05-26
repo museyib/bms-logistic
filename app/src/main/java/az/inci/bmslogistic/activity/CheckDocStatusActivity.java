@@ -1,11 +1,8 @@
 package az.inci.bmslogistic.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-
-import androidx.annotation.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +60,7 @@ public class CheckDocStatusActivity extends ScannerSupportActivity
 
     private void publishResult(ShipDocInfo docInfo)
     {
-        if (docInfo != null)
+        if(docInfo != null)
         {
             trxNoEdit.setText(trxNo);
             driverCodeEdit.setText(docInfo.getDriverCode());
@@ -90,23 +87,5 @@ public class CheckDocStatusActivity extends ScannerSupportActivity
         vehicleCodeEdit.setText("");
         noteEdit.setText("");
         statusEdit.setText("");
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != -1)
-        {
-            if (data != null)
-            {
-                if (resultCode == 1)
-                {
-                    String barcode = data.getStringExtra("barcode");
-                    onScanComplete(barcode);
-                }
-            }
-        }
     }
 }

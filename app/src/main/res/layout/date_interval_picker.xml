@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-
-    <EditText
-        android:id="@+id/date_from"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:autofillHints="@string/from_date"
-        android:ems="10"
-        android:hint="@string/from_date"
-        android:inputType="date" />
+        android:orientation="vertical">
 
     <EditText
-        android:id="@+id/date_to"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:autofillHints="@string/to_date"
-        android:ems="10"
-        android:hint="@string/to_date"
-        android:inputType="date" />
+            android:id="@+id/date_from"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:autofillHints="@string/from_date"
+            android:ems="10"
+            android:hint="@string/from_date"
+            android:inputType="date" />
+
+    <EditText
+            android:id="@+id/date_to"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:autofillHints="@string/to_date"
+            android:ems="10"
+            android:hint="@string/to_date"
+            android:inputType="date" />
 </LinearLayout>

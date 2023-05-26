@@ -17,7 +17,6 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -93,7 +92,7 @@ public class DeliveryActivity extends ScannerSupportActivity
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult)
             {
-                for (Location location : locationResult.getLocations())
+                for(Location location : locationResult.getLocations())
                 {
                     currentLongitude = location.getLongitude();
                     currentLatitude = location.getLatitude();
@@ -107,7 +106,7 @@ public class DeliveryActivity extends ScannerSupportActivity
                                         .get(0)
                                         .getAddressLine(0));
                     }
-                    catch (IOException e)
+                    catch(IOException e)
                     {
                         e.printStackTrace();
                     }
@@ -132,8 +131,8 @@ public class DeliveryActivity extends ScannerSupportActivity
             Point currentPoint = new Point(currentLongitude, currentLatitude);
             Point targetPoint = new Point(targetLongitude, targetLatitude);
 
-            if (currentPoint.getDistance(targetPoint) <= 100 ||
-                targetCodeEdit.getText().toString().equals("B0025210"))
+            if(currentPoint.getDistance(targetPoint) <= 100 ||
+               targetCodeEdit.getText().toString().equals("B0025210"))
             {
 
                 AlertDialog.Builder dialog = new AlertDialog.Builder(this);
@@ -179,7 +178,7 @@ public class DeliveryActivity extends ScannerSupportActivity
             url = addRequestParameters(url, parameters);
             ShipDocInfo docInfo = getSimpleObject(url, "GET", null, ShipDocInfo.class);
 
-            if (docInfo != null) runOnUiThread(() -> publishResult(docInfo));
+            if(docInfo != null) runOnUiThread(() -> publishResult(docInfo));
         }).start();
     }
 
@@ -198,13 +197,13 @@ public class DeliveryActivity extends ScannerSupportActivity
         vehicleCodeEdit.setText(docInfo.getVehicleCode());
 
         String note = docInfo.getDeliverNotes();
-        if (!note.isEmpty())
+        if(!note.isEmpty())
         {
             String[] split = note.split("; ");
-            if (split.length > 1)
+            if(split.length > 1)
             {
                 String[] split1 = split[1].split(": ");
-                if (split1.length > 1) note = split1[1];
+                if(split1.length > 1) note = split1[1];
                 else note = "";
             }
             else note = "";
@@ -215,8 +214,8 @@ public class DeliveryActivity extends ScannerSupportActivity
         String targetName = docInfo.getTargetName();
         targetCodeEdit.setText(targetCode);
         targetNameEdit.setText(targetName);
-        if ((docInfo.getLongitude() == 0 || docInfo.getLatitude() == 0) &&
-            !targetCode.equals("B0025210"))
+        if((docInfo.getLongitude() == 0 || docInfo.getLatitude() == 0) &&
+           !targetCode.equals("B0025210"))
         {
             showMessageDialog(getString(R.string.info),
                               getString(R.string.not_found_location_for_target),
@@ -230,7 +229,7 @@ public class DeliveryActivity extends ScannerSupportActivity
                 targetLongitude = docInfo.getLongitude();
                 targetLatitude = docInfo.getLatitude();
             }
-            catch (NumberFormatException e)
+            catch(NumberFormatException e)
             {
                 targetLongitude = 0;
                 targetLatitude = 0;
@@ -255,14 +254,14 @@ public class DeliveryActivity extends ScannerSupportActivity
 
     private void getLocationUpdates()
     {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED)
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+           PackageManager.PERMISSION_GRANTED &&
+           ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+           PackageManager.PERMISSION_GRANTED)
         {
             ActivityCompat.requestPermissions(this,
                                               new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                                           Manifest.permission.ACCESS_COARSE_LOCATION},
+                                                      Manifest.permission.ACCESS_COARSE_LOCATION},
                                               1);
         }
         else fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback,
@@ -281,7 +280,7 @@ public class DeliveryActivity extends ScannerSupportActivity
         showProgressDialog(true);
         new Thread(() -> {
             note = "İstifadəçi: " + config().getUser().getId();
-            if (!noteEdit.getText().toString().isEmpty())
+            if(!noteEdit.getText().toString().isEmpty())
                 note += "; Qeyd: " + noteEdit.getText().toString();
             String deliverPerson = deliverPersonEdit.getText().toString();
 
@@ -295,7 +294,7 @@ public class DeliveryActivity extends ScannerSupportActivity
             request.setStatus("MC");
             request.setRequestItems(Collections.singletonList(requestItem));
             executeUpdate(url, request, message -> {
-                if (message.getStatusCode() == 0)
+                if(message.getStatusCode() == 0)
                 {
                     showMessageDialog(message.getTitle(), message.getBody(), message.getIconId());
                     clearFields();
@@ -317,21 +316,6 @@ public class DeliveryActivity extends ScannerSupportActivity
 
             });
         }).start();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != -1)
-        {
-            if (data != null)
-            {
-                String barcode = data.getStringExtra("barcode");
-                onScanComplete(barcode);
-            }
-        }
     }
 
     @Override

@@ -55,7 +55,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doc_list);
 
-        if (docList == null)
+        if(docList == null)
         {findViewById(R.id.header).setVisibility(View.GONE);}
 
         refresh = findViewById(R.id.refresh);
@@ -70,11 +70,11 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
             EditText dateToEdit = datePicker.findViewById(R.id.date_to);
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-            if (startDate != null)
+            if(startDate != null)
             {dateFromEdit.setText(startDate);}
             else
             {dateFromEdit.setText(format.format(new Date()));}
-            if (endDate != null)
+            if(endDate != null)
             {dateToEdit.setText(endDate);}
             else
             {dateToEdit.setText(format.format(new Date()));}
@@ -94,7 +94,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         });
 
         printBtn.setOnClickListener(v -> {
-            if (docList != null && docList.size() > 0)
+            if(docList != null && docList.size() > 0)
             {
                 showProgressDialog(true);
                 print(getPrintForm());
@@ -119,7 +119,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     @Override
     public void onBackPressed()
     {
-        if (!searchView.isIconified())
+        if(!searchView.isIconified())
         {searchView.setIconified(true);}
         else
         {super.onBackPressed();}
@@ -135,7 +135,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
             parameters.put("end-date", endDate);
             url = addRequestParameters(url, parameters);
             docList = getListData(url, ShipDoc[].class);
-            if (docList != null) runOnUiThread(this::publishResult);
+            if(docList != null) runOnUiThread(this::publishResult);
         }).start();
     }
 
@@ -155,7 +155,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     public boolean onQueryTextChange(String s)
     {
         DocAdapter adapter = (DocAdapter) docListView.getAdapter();
-        if (adapter != null)
+        if(adapter != null)
         {adapter.getFilter().filter(s);}
         return true;
     }
@@ -194,7 +194,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
         printAdapter = webView.createPrintDocumentAdapter(jobName);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             builder.setDuplexMode(PrintAttributes.DUPLEX_MODE_LONG_EDGE);
         printManager.print(jobName, printAdapter, builder.build());
     }
@@ -215,7 +215,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         html = html.concat("<th>Müştəri adı</th>");
         html = html.concat("<th>Təmsilçi kodu</th>");
         html = html.concat("<th>Təmsilçi adı</th>");
-        for (ShipDoc shipDoc : docList)
+        for(ShipDoc shipDoc : docList)
         {
 
             html = html.concat("<tr><td>" + shipDoc.getTrxNo() + "</td>");
@@ -255,7 +255,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
         {
-            if (convertView == null)
+            if(convertView == null)
             {
                 convertView = LayoutInflater.from(context)
                                             .inflate(R.layout.doc_list_item, parent, false);
@@ -300,15 +300,15 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
                     List<ShipDoc> filteredArrayData = new ArrayList<>();
                     constraint = constraint.toString().toLowerCase();
 
-                    for (ShipDoc doc : activity.docList)
+                    for(ShipDoc doc : activity.docList)
                     {
-                        if (doc.getTrxNo()
-                               .concat(doc.getTrxNo())
-                               .concat(doc.getBpName())
-                               .concat(doc.getSbeName().concat(doc.getSbeCode()))
-                               .concat(doc.getDriverName())
-                               .toLowerCase()
-                               .contains(constraint))
+                        if(doc.getTrxNo()
+                              .concat(doc.getTrxNo())
+                              .concat(doc.getBpName())
+                              .concat(doc.getSbeName().concat(doc.getSbeCode()))
+                              .concat(doc.getDriverName())
+                              .toLowerCase()
+                              .contains(constraint))
                         {
                             filteredArrayData.add(doc);
                         }

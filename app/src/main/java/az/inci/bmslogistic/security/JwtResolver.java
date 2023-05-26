@@ -26,6 +26,7 @@ public class JwtResolver
     private final String username;
     private final String password;
     private final String secretKey;
+    Gson gson = new Gson();
 
     public JwtResolver(Context context)
     {
@@ -35,7 +36,7 @@ public class JwtResolver
         {
             properties.load(context.getAssets().open("app.properties"));
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             throw new RuntimeException(e);
         }
@@ -58,19 +59,19 @@ public class JwtResolver
             authenticationRequest.setPassword(password);
             authenticationRequest.setSecretKey(secretKey);
             URL url = new URL(serviceUrl + "/v3/authenticate");
-            RequestBody requestBody = RequestBody.create(new Gson().toJson(authenticationRequest),
-                                                         MediaType.get("application/json;charset=UTF-8"));
+            RequestBody requestBody = RequestBody.create(gson.toJson(authenticationRequest),
+                                                         MediaType.get(
+                                                                 "application/json;charset=UTF-8"));
             Request request = new Request.Builder()
                     .method("POST", requestBody)
                     .url(url)
                     .header("Content-Type", "application/json")
                     .build();
 
-            try (Response httpResponse = httpClient.newCall(request).execute())
+            try(Response httpResponse = httpClient.newCall(request).execute())
             {
                 ResponseBody responseBody = httpResponse.body();
 
-                Gson gson = new Gson();
                 CustomResponse response = gson.fromJson(responseBody.string(),
                                                         new TypeToken<CustomResponse>() {}.getType());
                 AuthenticationResponse authenticationResponse = gson.fromJson(
@@ -79,7 +80,7 @@ public class JwtResolver
                 jwt = authenticationResponse.getToken();
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }

@@ -11,8 +11,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import androidx.annotation.Nullable;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +95,7 @@ public class SendingActivity extends ScannerSupportActivity
             url = addRequestParameters(url, parameters);
             ShipDocInfo docInfo = getSimpleObject(url, "GET", null, ShipDocInfo.class);
 
-            if (docInfo != null) runOnUiThread(() -> publishResult(docInfo));
+            if(docInfo != null) runOnUiThread(() -> publishResult(docInfo));
         }).start();
     }
 
@@ -117,13 +115,13 @@ public class SendingActivity extends ScannerSupportActivity
         returnCheck.setEnabled(false);
 
         String note = docInfo.getDeliverNotes();
-        if (note != null)
+        if(note != null)
         {
             String[] split = note.split("; ");
-            if (split.length > 1)
+            if(split.length > 1)
             {
                 String[] split1 = split[1].split(": ");
-                if (split1.length > 1) {note = split1[1];}
+                if(split1.length > 1) {note = split1[1];}
                 else {note = "";}
             }
             else {note = "";}
@@ -133,7 +131,7 @@ public class SendingActivity extends ScannerSupportActivity
         filled = true;
         changeFillingStatus();
 
-        if (docInfo.getShipStatus().equals("PL"))
+        if(docInfo.getShipStatus().equals("PL"))
         {
             showMessageDialog(getString(R.string.info),
                               getString(R.string.caution_doc_have_sent_already),
@@ -159,7 +157,7 @@ public class SendingActivity extends ScannerSupportActivity
         new Thread(() -> {
             String status = returnMode ? "PL" : "YC";
             String note = "İstifadəçi: " + config().getUser().getId();
-            if (!noteEdit.getText().toString().isEmpty())
+            if(!noteEdit.getText().toString().isEmpty())
             {note += "; Qeyd: " + noteEdit.getText().toString();}
             String url = url("logistics", "change-doc-status");
             Map<String, String> parameters = new HashMap<>();
@@ -176,7 +174,7 @@ public class SendingActivity extends ScannerSupportActivity
 
             executeUpdate(url, request, message -> {
                 showMessageDialog(message.getTitle(), message.getBody(), message.getIconId());
-                if (message.getStatusCode() == 0)
+                if(message.getStatusCode() == 0)
                 {
                     clearFields();
                     changeFillingStatus();
@@ -184,24 +182,6 @@ public class SendingActivity extends ScannerSupportActivity
                 else playSound(SOUND_FAIL);
             });
         }).start();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != -1)
-        {
-            if (data != null)
-            {
-                if (resultCode == 1)
-                {
-                    String barcode = data.getStringExtra("barcode");
-                    onScanComplete(barcode);
-                }
-            }
-        }
     }
 
     @Override

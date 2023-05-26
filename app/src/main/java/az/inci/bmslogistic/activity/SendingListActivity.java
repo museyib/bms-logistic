@@ -59,7 +59,7 @@ public class SendingListActivity extends ScannerSupportActivity
         docList = new ArrayList<>();
 
         send.setOnClickListener(v -> {
-            if (docList.size() > 0)
+            if(docList.size() > 0)
             {
                 changeDocStatus();
             }
@@ -81,7 +81,7 @@ public class SendingListActivity extends ScannerSupportActivity
         scanDriverCode.setOnClickListener(v -> barcodeResultLauncher.launch(SCAN_DRIVER_CODE));
 
         scanNewDoc.setOnClickListener(v -> {
-            if (!docCreated)
+            if(!docCreated)
             {
                 showMessageDialog(getString(R.string.info), getString(R.string.driver_not_defined),
                                   android.R.drawable.ic_dialog_info);
@@ -101,34 +101,13 @@ public class SendingListActivity extends ScannerSupportActivity
     {
         this.barcode = barcode;
 
-        if (docCreated) getShipDetails(barcode);
+        if(docCreated) getShipDetails(barcode);
         else setDriverCode(barcode);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        barcode = data.getStringExtra("barcode");
-
-        if (resultCode == 1 && barcode != null)
-        {
-            switch (requestCode)
-            {
-                case SCAN_DRIVER_CODE:
-                    setDriverCode(barcode);
-                    break;
-                case SCAN_NEW_DOC:
-                    getShipDetails(barcode);
-                    break;
-            }
-        }
     }
 
     public void setDriverCode(String driverCode)
     {
-        if (driverCode.startsWith("PER"))
+        if(driverCode.startsWith("PER"))
         {
             showProgressDialog(true);
             new Thread(() -> {
@@ -138,10 +117,10 @@ public class SendingListActivity extends ScannerSupportActivity
                 url = addRequestParameters(url, parameters);
                 Log.e("URL", url);
                 String perName = getSimpleObject(url, "GET", null, String.class);
-                if (perName != null)
+                if(perName != null)
                 {
                     runOnUiThread(() -> {
-                        if (!perName.isEmpty())
+                        if(!perName.isEmpty())
                         {
 
                             docCreated = true;
@@ -178,7 +157,7 @@ public class SendingListActivity extends ScannerSupportActivity
 
     private void getShipDetails(String trxNo)
     {
-        if (docList.contains(barcode)) return;
+        if(docList.contains(barcode)) return;
 
         showProgressDialog(true);
         new Thread(() -> {
@@ -188,13 +167,13 @@ public class SendingListActivity extends ScannerSupportActivity
             parameters.put("trx-no", trxNo);
             url = addRequestParameters(url, parameters);
             ShipDocInfo docInfo = getSimpleObject(url, "GET", null, ShipDocInfo.class);
-            if (docInfo != null) runOnUiThread(() -> addDoc(trxNo, docInfo));
+            if(docInfo != null) runOnUiThread(() -> addDoc(trxNo, docInfo));
         }).start();
     }
 
     private void addDoc(String trxNo, ShipDocInfo docInfo)
     {
-        if (!driverCode.equals(docInfo.getDriverCode()))
+        if(!driverCode.equals(docInfo.getDriverCode()))
         {
             showMessageDialog(getString(R.string.info),
                               getString(R.string.not_shipped_for_current_driver) +
@@ -222,7 +201,7 @@ public class SendingListActivity extends ScannerSupportActivity
             UpdateDeliveryRequest request = new UpdateDeliveryRequest();
             request.setStatus("YC");
             List<UpdateDeliveryRequestItem> requestItems = new ArrayList<>();
-            for (String trxNo : docList)
+            for(String trxNo : docList)
             {
                 UpdateDeliveryRequestItem requestItem = new UpdateDeliveryRequestItem();
                 requestItem.setTrxNo(trxNo);
@@ -234,7 +213,7 @@ public class SendingListActivity extends ScannerSupportActivity
             request.setRequestItems(requestItems);
             executeUpdate(url, request, message -> {
                 showMessageDialog(message.getTitle(), message.getBody(), message.getIconId());
-                if (message.getStatusCode() == 0) clearFields();
+                if(message.getStatusCode() == 0) clearFields();
                 else playSound(SOUND_FAIL);
             });
         }).start();
