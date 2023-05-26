@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.example.bmslogistic",
+  "applicationId": "az.inci.bmslogistic",
   "variantName": "release",
   "elements": [
     {
