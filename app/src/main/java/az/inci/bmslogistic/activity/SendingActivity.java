@@ -1,6 +1,10 @@
 package az.inci.bmslogistic.activity;
 
 import static android.R.drawable.ic_dialog_info;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
+import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -22,20 +26,16 @@ import az.inci.bmslogistic.model.UpdateDeliveryRequestItem;
 
 public class SendingActivity extends ScannerSupportActivity
 {
-
-    Button scanCam;
-    Button confirm;
-    Button cancel;
-
-    EditText trxNoEdit;
-    EditText driverCodeEdit;
-    EditText driverNameEdit;
-    EditText vehicleCodeEdit;
-    EditText noteEdit;
-    CheckBox returnCheck;
-
-    boolean filled;
-    boolean returnMode;
+    private Button confirm;
+    private Button cancel;
+    private EditText trxNoEdit;
+    private EditText driverCodeEdit;
+    private EditText driverNameEdit;
+    private EditText vehicleCodeEdit;
+    private EditText noteEdit;
+    private CheckBox returnCheck;
+    private boolean filled;
+    private boolean returnMode;
     private String trxNo;
 
     @Override
@@ -44,7 +44,7 @@ public class SendingActivity extends ScannerSupportActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sending);
 
-        scanCam = findViewById(R.id.scan_cam);
+        Button scanCam = findViewById(R.id.scan_cam);
         confirm = findViewById(R.id.confirm);
         cancel = findViewById(R.id.cancel);
         trxNoEdit = findViewById(R.id.trx_no);
@@ -58,6 +58,7 @@ public class SendingActivity extends ScannerSupportActivity
 
         changeFillingStatus();
 
+        scanCam.setVisibility(cameraScanning ? VISIBLE : GONE);
         scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
 
         confirm.setOnClickListener(view -> {

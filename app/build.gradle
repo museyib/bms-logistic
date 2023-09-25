@@ -9,7 +9,7 @@ android {
             keyPassword 'Aa123456'
         }
     }
-    compileSdkVersion 33
+    compileSdk 33
 
     defaultConfig {
         applicationId "az.inci.bmslogistic"
@@ -56,7 +56,7 @@ dependencies {
     implementation files('libs/platform_sdk_v4.1.0326.jar')
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
     implementation 'com.android.support:multidex:2.0.1'
-    implementation 'androidx.preference:preference:1.2.0'
+    implementation 'androidx.preference:preference:1.2.1'
     compileOnly(annotationProcessor 'org.projectlombok:lombok:1.18.26')
 
 }

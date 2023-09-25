@@ -1,6 +1,9 @@
 package az.inci.bmslogistic.activity;
 
 import static android.R.drawable.ic_dialog_info;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
 import static az.inci.bmslogistic.LocationService.UPDATE_INTERVAL_IN_MILLISECONDS;
 
 import android.Manifest;
@@ -41,24 +44,20 @@ import az.inci.bmslogistic.model.UpdateDocLocationRequest;
 
 public class DeliveryActivity extends ScannerSupportActivity
 {
-    FusedLocationProviderClient fusedLocationProviderClient;
-    LocationCallback locationCallback;
-    LocationRequest locationRequest;
-
-    Button scanCam;
-    Button confirm;
-    Button cancel;
-
-    EditText trxNoEdit;
-    EditText driverCodeEdit;
-    EditText driverNameEdit;
-    EditText vehicleCodeEdit;
-    EditText targetCodeEdit;
-    EditText targetNameEdit;
-    EditText noteEdit;
-    EditText deliverPersonEdit;
-
-    boolean filled;
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
+    private Button confirm;
+    private Button cancel;
+    private EditText trxNoEdit;
+    private EditText driverCodeEdit;
+    private EditText driverNameEdit;
+    private EditText vehicleCodeEdit;
+    private EditText targetCodeEdit;
+    private EditText targetNameEdit;
+    private EditText noteEdit;
+    private EditText deliverPersonEdit;
+    private boolean filled;
     private String trxNo;
     private String note;
     private double targetLatitude;
@@ -72,7 +71,7 @@ public class DeliveryActivity extends ScannerSupportActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delivery);
 
-        scanCam = findViewById(R.id.scan_cam);
+        Button scanCam = findViewById(R.id.scan_cam);
         confirm = findViewById(R.id.confirm);
         cancel = findViewById(R.id.cancel);
 
@@ -120,6 +119,7 @@ public class DeliveryActivity extends ScannerSupportActivity
 
         changeFillingStatus();
 
+        scanCam.setVisibility(cameraScanning ? VISIBLE : GONE);
         scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
 
         cancel.setOnClickListener(view -> {

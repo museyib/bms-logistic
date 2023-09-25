@@ -1,6 +1,10 @@
 package az.inci.bmslogistic.activity;
 
 import static android.R.drawable.ic_dialog_alert;
+import static android.R.drawable.ic_dialog_info;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -8,7 +12,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,20 +31,12 @@ import az.inci.bmslogistic.model.UpdateDeliveryRequestItem;
 
 public class SendingListActivity extends ScannerSupportActivity
 {
-    static final int SCAN_DRIVER_CODE = 0;
-    static final int SCAN_NEW_DOC = 1;
-    String driverCode;
-    String barcode;
-    ListView docListView;
-    Button scanDriverCode;
-    Button scanNewDoc;
-    Button cancel;
-    EditText driverCodeEditText;
-    ImageButton send;
-    List<String> docList;
-    boolean docCreated = false;
-
-    boolean returnMode;
+    private String driverCode;
+    private String barcode;
+    private ListView docListView;
+    private EditText driverCodeEditText;
+    private List<String> docList;
+    private boolean docCreated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -50,11 +45,10 @@ public class SendingListActivity extends ScannerSupportActivity
         setContentView(R.layout.sending_list_layout);
 
         driverCodeEditText = findViewById(R.id.driver);
-        scanDriverCode = findViewById(R.id.scan_driver_code);
-        scanNewDoc = findViewById(R.id.scan_new_doc);
+        Button scanCam = findViewById(R.id.scan_cam);
         docListView = findViewById(R.id.ship_trx_list_view);
-        send = findViewById(R.id.send);
-        cancel = findViewById(R.id.cancel_button);
+        ImageButton send = findViewById(R.id.send);
+        Button cancel = findViewById(R.id.cancel_button);
 
         docList = new ArrayList<>();
 
@@ -78,18 +72,8 @@ public class SendingListActivity extends ScannerSupportActivity
             return true;
         });
 
-        scanDriverCode.setOnClickListener(v -> barcodeResultLauncher.launch(SCAN_DRIVER_CODE));
-
-        scanNewDoc.setOnClickListener(v -> {
-            if(!docCreated)
-            {
-                showMessageDialog(getString(R.string.info), getString(R.string.driver_not_defined),
-                                  android.R.drawable.ic_dialog_info);
-                return;
-            }
-
-            barcodeResultLauncher.launch(SCAN_NEW_DOC);
-        });
+        scanCam.setVisibility(cameraScanning ? VISIBLE : GONE);
+        scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
 
         cancel.setOnClickListener(v -> clearFields());
 
@@ -161,8 +145,7 @@ public class SendingListActivity extends ScannerSupportActivity
 
         showProgressDialog(true);
         new Thread(() -> {
-            String action = returnMode ? "doc-info-for-return" : "doc-info-for-sending";
-            String url = url("logistics", action);
+            String url = url("logistics", "doc-info-for-sending");
             Map<String, String> parameters = new HashMap<>();
             parameters.put("trx-no", trxNo);
             url = addRequestParameters(url, parameters);
@@ -179,14 +162,13 @@ public class SendingListActivity extends ScannerSupportActivity
                               getString(R.string.not_shipped_for_current_driver) +
                               "\n\nYükləndiyi sürücü  və N/V nömrəsi:\n" + docInfo.getDriverName() +
                               " - " + docInfo.getVehicleCode() + "\n" + docInfo.getDeliverNotes(),
-                              android.R.drawable.ic_dialog_info);
+                              ic_dialog_info);
             playSound(SOUND_FAIL);
             return;
         }
 
         playSound(SOUND_SUCCESS);
         docList.add(trxNo);
-        scanDriverCode.setVisibility(View.GONE);
         loadData();
     }
 
@@ -226,7 +208,6 @@ public class SendingListActivity extends ScannerSupportActivity
         ((TextView) findViewById(R.id.driver_name)).setText("");
         docCreated = false;
         docList.clear();
-        scanDriverCode.setVisibility(View.VISIBLE);
         loadData();
     }
 

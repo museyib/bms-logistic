@@ -1,5 +1,9 @@
 package az.inci.bmslogistic.activity;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
+
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,15 +17,12 @@ import az.inci.bmslogistic.model.ShipDocInfo;
 public class CheckDocStatusActivity extends ScannerSupportActivity
 {
 
-    Button scanCam;
-
-    EditText trxNoEdit;
-    EditText driverCodeEdit;
-    EditText driverNameEdit;
-    EditText vehicleCodeEdit;
-    EditText statusEdit;
-    EditText noteEdit;
-
+    private EditText trxNoEdit;
+    private EditText driverCodeEdit;
+    private EditText driverNameEdit;
+    private EditText vehicleCodeEdit;
+    private EditText statusEdit;
+    private EditText noteEdit;
     private String trxNo;
 
     @Override
@@ -30,7 +31,7 @@ public class CheckDocStatusActivity extends ScannerSupportActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_doc_status);
 
-        scanCam = findViewById(R.id.scan_cam);
+        Button scanCam = findViewById(R.id.scan_cam);
         trxNoEdit = findViewById(R.id.trx_no);
         driverCodeEdit = findViewById(R.id.driver_code);
         driverNameEdit = findViewById(R.id.driver_name);
@@ -38,6 +39,7 @@ public class CheckDocStatusActivity extends ScannerSupportActivity
         statusEdit = findViewById(R.id.status);
         noteEdit = findViewById(R.id.note);
 
+        scanCam.setVisibility(cameraScanning ? VISIBLE : GONE);
         scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
 
         loadFooter();
