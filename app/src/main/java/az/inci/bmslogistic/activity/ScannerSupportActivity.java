@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.device.ScanManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 
@@ -42,9 +43,9 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
     ActivityResultLauncher<Integer> barcodeResultLauncher = barcodeResultLauncher();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
+    protected void onResume()
     {
-        super.onCreate(savedInstanceState);
+        super.onResume();
         initS98Scanner();
     }
 
@@ -57,7 +58,11 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
             scanManager.openScanner();
             IntentFilter filter = new IntentFilter();
             filter.addAction(ScanManager.ACTION_DECODE);
-            registerReceiver(urovoScanReceiver, filter);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                registerReceiver(urovoScanReceiver, filter, RECEIVER_EXPORTED);
+            }
+            else
+                registerReceiver(urovoScanReceiver, filter);
         }
         catch(RuntimeException e)
         {
@@ -91,7 +96,7 @@ public abstract class ScannerSupportActivity extends AppBaseActivity
             if(barcode2DWithSoft.open(this))
                 setS98ScanCallback();
         }
-        catch(Exception e)
+        catch(Throwable e)
         {
             e.printStackTrace();
         }

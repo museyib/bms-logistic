@@ -88,6 +88,7 @@
                 android:name=".activity.BarcodeScannerCamera"
                 android:label="Kamera skaner" />
         <activity android:name=".activity.SendingListActivity" />
+        <activity android:name="az.inci.bmslogistic.activity.ScannerSupportActivity" />
     </application>
 
 </manifest>
