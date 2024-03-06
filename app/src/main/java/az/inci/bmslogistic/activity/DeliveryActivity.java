@@ -1,6 +1,8 @@
 package az.inci.bmslogistic.activity;
 
+import static android.R.drawable.ic_dialog_alert;
 import static android.R.drawable.ic_dialog_info;
+import static android.text.TextUtils.isEmpty;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
@@ -17,6 +19,7 @@ import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
@@ -30,16 +33,14 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import az.inci.bmslogistic.LocationService;
 import az.inci.bmslogistic.Point;
 import az.inci.bmslogistic.R;
+import az.inci.bmslogistic.model.ConfirmDeliveryRequest;
 import az.inci.bmslogistic.model.ShipDocInfo;
-import az.inci.bmslogistic.model.UpdateDeliveryRequest;
-import az.inci.bmslogistic.model.UpdateDeliveryRequestItem;
 import az.inci.bmslogistic.model.UpdateDocLocationRequest;
 
 public class DeliveryActivity extends ScannerSupportActivity
@@ -48,7 +49,6 @@ public class DeliveryActivity extends ScannerSupportActivity
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
     private Button confirm;
-    private Button cancel;
     private EditText trxNoEdit;
     private EditText driverCodeEdit;
     private EditText driverNameEdit;
@@ -57,6 +57,8 @@ public class DeliveryActivity extends ScannerSupportActivity
     private EditText targetNameEdit;
     private EditText noteEdit;
     private EditText deliverPersonEdit;
+    private EditText confirmationCodeEdit;
+    private CheckBox transitionCheck;
     private boolean filled;
     private String trxNo;
     private String note;
@@ -64,6 +66,7 @@ public class DeliveryActivity extends ScannerSupportActivity
     private double targetLongitude;
     private double currentLongitude;
     private double currentLatitude;
+    private boolean transitionFlag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -71,9 +74,9 @@ public class DeliveryActivity extends ScannerSupportActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delivery);
 
-        Button scanCam = findViewById(R.id.scan_cam);
+        Button scanBtn = findViewById(R.id.scan_btn);
         confirm = findViewById(R.id.confirm);
-        cancel = findViewById(R.id.cancel);
+        Button cancel = findViewById(R.id.cancel);
 
         trxNoEdit = findViewById(R.id.trx_no);
         driverCodeEdit = findViewById(R.id.driver_code);
@@ -83,6 +86,8 @@ public class DeliveryActivity extends ScannerSupportActivity
         targetNameEdit = findViewById(R.id.target_name);
         noteEdit = findViewById(R.id.note);
         deliverPersonEdit = findViewById(R.id.deliver_person);
+        confirmationCodeEdit = findViewById(R.id.confirmation_code);
+        transitionCheck = findViewById(R.id.transition_check);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -119,8 +124,10 @@ public class DeliveryActivity extends ScannerSupportActivity
 
         changeFillingStatus();
 
-        scanCam.setVisibility(cameraScanning ? VISIBLE : GONE);
-        scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
+        scanBtn.setVisibility(cameraScanning ? VISIBLE : GONE);
+        scanBtn.setOnClickListener(v -> {
+            barcodeResultLauncher.launch(0);
+        });
 
         cancel.setOnClickListener(view -> {
             clearFields();
@@ -128,32 +135,43 @@ public class DeliveryActivity extends ScannerSupportActivity
         });
 
         confirm.setOnClickListener(view -> {
-            Point currentPoint = new Point(currentLongitude, currentLatitude);
-            Point targetPoint = new Point(targetLongitude, targetLatitude);
-
-            if(currentPoint.getDistance(targetPoint) <= 100 ||
-               targetCodeEdit.getText().toString().equals("B0025210"))
+            if (isEmpty(deliverPersonEdit.getText()))
             {
-
-                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                dialog.setMessage(R.string.want_to_confirm)
-                      .setCancelable(false)
-                      .setPositiveButton(R.string.yes, (dialogInterface, i) -> {
-                          changeDocStatus();
-                          clearFields();
-                          changeFillingStatus();
-                      })
-                      .setNegativeButton(R.string.no, null);
-                dialog.show();
+                showMessageDialog(getString(R.string.info),
+                        "Təhvil alan şəxs qeyd edilməyib!",
+                        ic_dialog_alert);
+            }
+            else if (isEmpty(confirmationCodeEdit.getText()))
+            {
+                showMessageDialog(getString(R.string.info),
+                        "Təsdiq kodu qeyd edilməyib!",
+                        ic_dialog_alert);
             }
             else
             {
-                showMessageDialog(getString(R.string.info),
-                                  "Hədəf nöqtəsinə kifayət qədər yaxın deyilsiniz.",
-                                  ic_dialog_info);
+                Point currentPoint = new Point(currentLongitude, currentLatitude);
+                Point targetPoint = new Point(targetLongitude, targetLatitude);
+
+                if (Point.getDistance(targetPoint, currentPoint) <= 100 ||
+                        targetCodeEdit.getText().toString().equals("B0025210")) {
+
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                    dialog.setMessage(R.string.want_to_confirm)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.yes, (dialogInterface, i) -> {
+                                confirmDelivery();
+                            })
+                            .setNegativeButton(R.string.no, null);
+                    dialog.show();
+                } else {
+                    showMessageDialog(getString(R.string.info),
+                            "Hədəf nöqtəsinə kifayət qədər yaxın deyilsiniz.",
+                            ic_dialog_info);
+                }
             }
         });
 
+        transitionCheck.setOnCheckedChangeListener((buttonView, isChecked) -> transitionFlag = isChecked);
         loadFooter();
 
         Intent intent = new Intent(this, LocationService.class);
@@ -163,9 +181,9 @@ public class DeliveryActivity extends ScannerSupportActivity
     private void changeFillingStatus()
     {
         confirm.setEnabled(filled);
-        cancel.setEnabled(filled);
         noteEdit.setEnabled(filled);
         deliverPersonEdit.setEnabled(filled);
+        transitionCheck.setEnabled(filled);
     }
 
     private void getShipDetails(String trxNo)
@@ -178,15 +196,25 @@ public class DeliveryActivity extends ScannerSupportActivity
             url = addRequestParameters(url, parameters);
             ShipDocInfo docInfo = getSimpleObject(url, "GET", null, ShipDocInfo.class);
 
-            if(docInfo != null) runOnUiThread(() -> publishResult(docInfo));
+            if(docInfo != null)
+                runOnUiThread(() -> publishResult(docInfo));
+            else
+                this.trxNo = "";
         }).start();
     }
 
     @Override
     public void onScanComplete(String barcode)
     {
-        trxNo = barcode;
-        getShipDetails(barcode);
+        if (isEmpty(trxNo))
+        {
+            trxNo = barcode;
+            getShipDetails(barcode);
+        }
+        else
+        {
+            confirmationCodeEdit.setText(barcode);
+        }
     }
 
     private void publishResult(ShipDocInfo docInfo)
@@ -220,7 +248,8 @@ public class DeliveryActivity extends ScannerSupportActivity
             showMessageDialog(getString(R.string.info),
                               getString(R.string.not_found_location_for_target),
                               ic_dialog_info);
-            return;
+            confirm.setEnabled(false);
+            filled = false;
         }
         else
         {
@@ -234,8 +263,8 @@ public class DeliveryActivity extends ScannerSupportActivity
                 targetLongitude = 0;
                 targetLatitude = 0;
             }
+            filled = true;
         }
-        filled = true;
         changeFillingStatus();
     }
 
@@ -250,6 +279,9 @@ public class DeliveryActivity extends ScannerSupportActivity
         targetNameEdit.setText("");
         noteEdit.setText("");
         deliverPersonEdit.setText("");
+        confirmationCodeEdit.setText("");
+        transitionCheck.setChecked(false);
+        trxNo = "";
     }
 
     private void getLocationUpdates()
@@ -275,7 +307,7 @@ public class DeliveryActivity extends ScannerSupportActivity
                 Priority.PRIORITY_HIGH_ACCURACY).build();
     }
 
-    private void changeDocStatus()
+    private void confirmDelivery()
     {
         showProgressDialog(true);
         new Thread(() -> {
@@ -283,22 +315,20 @@ public class DeliveryActivity extends ScannerSupportActivity
             if(!noteEdit.getText().toString().isEmpty())
                 note += "; Qeyd: " + noteEdit.getText().toString();
             String deliverPerson = deliverPersonEdit.getText().toString();
-
-            String url = url("logistics", "change-doc-status");
-            UpdateDeliveryRequest request = new UpdateDeliveryRequest();
-            UpdateDeliveryRequestItem requestItem = new UpdateDeliveryRequestItem();
-            requestItem.setTrxNo(trxNo);
-            requestItem.setNote(note);
-            requestItem.setDeliverPerson(deliverPerson);
-            requestItem.setDriverCode(driverCodeEdit.getText().toString());
-            request.setStatus("MC");
-            request.setRequestItems(Collections.singletonList(requestItem));
+            String url = url("logistics", "confirm-delivery");
+            ConfirmDeliveryRequest request = new ConfirmDeliveryRequest();
+            request.setTrxNo(trxNo);
+            request.setNote(note);
+            request.setDeliverPerson(deliverPerson);
+            request.setDriverCode(driverCodeEdit.getText().toString());
+            request.setTransitionFlag(transitionFlag);
+            request.setConfirmatioinCode(confirmationCodeEdit.getText().toString());
             executeUpdate(url, request, message -> {
-                if(message.getStatusCode() == 0)
-                {
-                    showMessageDialog(message.getTitle(), message.getBody(), message.getIconId());
+                if (message.getStatusCode() == 0) {
                     clearFields();
+                    changeFillingStatus();
                 }
+                showMessageDialog(message.getTitle(), message.getBody(), message.getIconId());
             });
         }).start();
     }
@@ -312,9 +342,7 @@ public class DeliveryActivity extends ScannerSupportActivity
             request.setLatitude(currentLatitude);
             request.setAddress(address);
             request.setUserId(config().getUser().getId());
-            executeUpdate(url, request, message -> {
-
-            });
+            executeUpdate(url, request, message -> {});
         }).start();
     }
 

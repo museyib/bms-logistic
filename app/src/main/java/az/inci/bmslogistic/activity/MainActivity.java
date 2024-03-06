@@ -188,16 +188,7 @@ public class MainActivity extends AppBaseActivity
                     }
                     else
                     {
-                        User user = dbHelper.getUser(id);
-                        if(user == null || loginViaServer.get())
-                        {
-                            loginViaServer();
-                        }
-                        else
-                        {
-                            loadUserInfo(user, false);
-                            attemptLogin(user);
-                        }
+                        loginViaServer();
 
                         dialog.dismiss();
                     }

@@ -73,4 +73,9 @@
     <string name="yes">Bəli</string>
     <string name="no">Xeyr</string>
     <string name="want_to_confirm">Təsdiqləmək istəyirsinizmi?</string>
+    <string name="apply_to_central">Mərkəzə qəbul</string>
+    <string name="scan_trx_no">Sənəd nömrəsini oxut</string>
+    <string name="scan_confirmation_code">Təsdiq kodunu oxut</string>
+    <string name="target_code">Hədəf kodu</string>
+    <string name="confirmation_code">Təsdiq kodu</string>
 </resources>
