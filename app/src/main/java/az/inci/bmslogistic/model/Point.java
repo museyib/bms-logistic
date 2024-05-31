@@ -1,4 +1,4 @@
-package az.inci.bmslogistic;
+package az.inci.bmslogistic.model;
 
 public class Point
 {

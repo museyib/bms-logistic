@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import az.inci.bmslogistic.LocationService;
-import az.inci.bmslogistic.Point;
+import az.inci.bmslogistic.model.Point;
 import az.inci.bmslogistic.R;
 import az.inci.bmslogistic.model.ConfirmDeliveryRequest;
 import az.inci.bmslogistic.model.ShipDocInfo;
@@ -349,7 +349,7 @@ public class DeliveryActivity extends ScannerSupportActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.sending_activity_menu, menu);
         MenuItem itemSearch = menu.findItem(R.id.check_doc_status);
         itemSearch.setOnMenuItemClickListener(menuItem -> {
             Intent intent = new Intent(this, CheckDocStatusActivity.class);

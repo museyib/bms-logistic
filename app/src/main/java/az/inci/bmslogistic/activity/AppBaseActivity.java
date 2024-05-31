@@ -40,7 +40,7 @@ import az.inci.bmslogistic.AppConfig;
 import az.inci.bmslogistic.DBHelper;
 import az.inci.bmslogistic.OnExecuteComplete;
 import az.inci.bmslogistic.R;
-import az.inci.bmslogistic.User;
+import az.inci.bmslogistic.model.User;
 import az.inci.bmslogistic.model.CustomResponse;
 import az.inci.bmslogistic.model.ResponseMessage;
 import az.inci.bmslogistic.security.JwtResolver;

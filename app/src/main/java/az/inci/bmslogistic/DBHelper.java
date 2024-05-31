@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.Objects;
 
+import az.inci.bmslogistic.model.User;
+
 public class DBHelper extends SQLiteOpenHelper
 {
     public static final String TERMINAL_USER = "TERMINAL_USER";

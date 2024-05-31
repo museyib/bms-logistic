@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 /app/release/
+/.idea/deploymentTargetSelector.xml
+/.idea/.name

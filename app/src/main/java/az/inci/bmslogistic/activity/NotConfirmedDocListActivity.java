@@ -1,7 +1,12 @@
 package az.inci.bmslogistic.activity;
 
+import static android.text.TextUtils.isEmpty;
+
+import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
+
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.print.PrintAttributes;
@@ -12,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
@@ -24,6 +30,7 @@ import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -38,70 +45,93 @@ import java.util.Map;
 import az.inci.bmslogistic.R;
 import az.inci.bmslogistic.model.ShipDoc;
 
-public class DocListActivity extends AppBaseActivity implements SearchView.OnQueryTextListener
-{
 
+public class NotConfirmedDocListActivity extends ScannerSupportActivity implements SearchView.OnQueryTextListener
+{
     SearchView searchView;
     Button refresh;
+    Button scanCam;
+    EditText driverCodeEdit;
     ListView docListView;
     ImageButton printBtn;
     List<ShipDoc> docList;
     String startDate;
     String endDate;
+    String driverCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_doc_list);
+        setContentView(R.layout.activity_not_confirmed_doc_list);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+
+                if(!searchView.isIconified())
+                    searchView.setIconified(true);
+                else
+                    finish();
+            }
+        });
 
         if(docList == null)
-        {findViewById(R.id.header).setVisibility(View.GONE);}
+            findViewById(R.id.header).setVisibility(View.GONE);
 
         refresh = findViewById(R.id.refresh);
+
+        scanCam = findViewById(R.id.scan_cam);
         printBtn = findViewById(R.id.print);
         docListView = findViewById(R.id.doc_list);
+        driverCodeEdit = findViewById(R.id.driver_code);
 
         refresh.setOnClickListener(view -> {
             View datePicker = LayoutInflater.from(this)
-                                            .inflate(R.layout.date_interval_picker,
-                                                     findViewById(android.R.id.content), false);
+                    .inflate(R.layout.date_interval_picker,
+                            findViewById(android.R.id.content), false);
             EditText dateFromEdit = datePicker.findViewById(R.id.date_from);
             EditText dateToEdit = datePicker.findViewById(R.id.date_to);
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
             if(startDate != null)
-            {dateFromEdit.setText(startDate);}
+                dateFromEdit.setText(startDate);
             else
-            {dateFromEdit.setText(format.format(new Date()));}
+                dateFromEdit.setText(format.format(new Date()));
             if(endDate != null)
-            {dateToEdit.setText(endDate);}
+                dateToEdit.setText(endDate);
             else
-            {dateToEdit.setText(format.format(new Date()));}
+                dateToEdit.setText(format.format(new Date()));
 
-            AlertDialog dialog = new AlertDialog.Builder(this).setView(datePicker)
-                                                              .setPositiveButton("OK",
-                                                                                 (dialogInterface, i) -> {
-                                                                                     startDate = dateFromEdit.getText()
-                                                                                                             .toString();
-                                                                                     endDate = dateToEdit.getText()
-                                                                                                         .toString();
-                                                                                     getDocList();
-                                                                                 })
-                                                              .create();
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this).setView(datePicker);
+            dialog.setPositiveButton("OK", (dialogInterface, i) -> {
+
+                driverCode = driverCodeEdit.getText().toString();
+                if(!isEmpty(driverCode))
+                {
+                    startDate = dateFromEdit.getText().toString();
+                    endDate = dateToEdit.getText().toString();
+                    getDocList();
+                }
+            });
 
             dialog.show();
         });
 
         printBtn.setOnClickListener(v -> {
-            if(docList != null && docList.size() > 0)
+            if(docList != null && !docList.isEmpty())
             {
                 showProgressDialog(true);
                 print(getPrintForm());
             }
         });
 
-        loadFooter();
+        scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
+
+        if(cameraScanning)
+            scanCam.setVisibility(View.VISIBLE);
+        else
+            scanCam.setVisibility(View.GONE);
     }
 
     @Override
@@ -111,28 +141,38 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         getMenuInflater().inflate(R.menu.not_confirmed_activity_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.search);
         searchView = (SearchView) searchItem.getActionView();
-        searchView.setOnQueryTextListener(this);
-        searchView.setActivated(true);
-        return true;
-    }
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(this);
+            searchView.setActivated(true);
+        }
 
-    @Override
-    public void onBackPressed()
-    {
-        if(!searchView.isIconified())
-        {searchView.setIconified(true);}
-        else
-        {super.onBackPressed();}
+        MenuItem itemSearch = menu.findItem(R.id.check_doc_status);
+        itemSearch.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, CheckDocStatusActivity.class);
+            startActivity(intent);
+            finish();
+            return true;
+        });
+
+        MenuItem itemWaitingDocList = menu.findItem(R.id.waiting_doc_list);
+        itemWaitingDocList.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, WaitingDocListActivity.class);
+            startActivity(intent);
+            finish();
+            return true;
+        });
+        return true;
     }
 
     private void getDocList()
     {
         showProgressDialog(true);
         new Thread(() -> {
-            String url = url("logistics", "doc-list");
+            String url = url("logistics", "not-confirmed-doc-list");
             Map<String, String> parameters = new HashMap<>();
             parameters.put("start-date", startDate);
             parameters.put("end-date", endDate);
+            parameters.put("driver-code", driverCode);
             url = addRequestParameters(url, parameters);
             docList = getListData(url, ShipDoc[].class);
             if(docList != null) runOnUiThread(this::publishResult);
@@ -156,7 +196,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
     {
         DocAdapter adapter = (DocAdapter) docListView.getAdapter();
         if(adapter != null)
-        {adapter.getFilter().filter(s);}
+            adapter.getFilter().filter(s);
         return true;
     }
 
@@ -165,8 +205,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         WebView webView = new WebView(this);
         webView.setWebViewClient(new WebViewClient()
         {
-
-            public boolean shouldOverrideUrlLoading(WebView view, String url)
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
             {
                 return false;
             }
@@ -194,18 +233,19 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
 
         printAdapter = webView.createPrintDocumentAdapter(jobName);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             builder.setDuplexMode(PrintAttributes.DUPLEX_MODE_LONG_EDGE);
+        }
         printManager.print(jobName, printAdapter, builder.build());
     }
 
     private String getPrintForm()
     {
         String html = "<html><head><style>*{margin:0px; padding:0px}" +
-                      "table,tr,th,td{border: 1px solid black;border-collapse: collapse; font-size: 12px}" +
-                      "th{background-color: #636d72;color:white}td,th{padding:0 4px 0 4px}</style>" +
-                      "</head><body>";
-        html = html.concat("<h3 style='text-align: center'>Yüklənən sənədlər</h3></br>");
+                "table,tr,th,td{border: 1px solid black;border-collapse: collapse; font-size: 12px}" +
+                "th{background-color: #636d72;color:white}td,th{padding:0 4px 0 4px}</style>" +
+                "</head><body>";
+        html = html.concat("<h3 style='text-align: center'>Təsdiqlənməmiş sənədlər</h3></br>");
         html = html.concat("<table>");
         html = html.concat("<tr><th>Sənəd №.</th>");
         html = html.concat("<th>Tarix</th>");
@@ -233,6 +273,12 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         return html;
     }
 
+    @Override
+    public void onScanComplete(String barcode)
+    {
+        driverCodeEdit.setText(barcode);
+    }
+
     private static class DocAdapter extends ArrayAdapter<ShipDoc> implements Filterable
     {
         List<ShipDoc> docList;
@@ -256,10 +302,8 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
         {
             if(convertView == null)
-            {
                 convertView = LayoutInflater.from(context)
-                                            .inflate(R.layout.doc_list_item, parent, false);
-            }
+                        .inflate(R.layout.doc_list_item, parent, false);
 
             ShipDoc doc = docList.get(position);
             TextView docNo = convertView.findViewById(R.id.doc_no);
@@ -291,7 +335,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
         {
             return new Filter()
             {
-                private final DocListActivity activity = (DocListActivity) context;
+                private final NotConfirmedDocListActivity activity = (NotConfirmedDocListActivity) context;
 
                 @Override
                 protected FilterResults performFiltering(CharSequence constraint)
@@ -301,18 +345,14 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
                     constraint = constraint.toString().toLowerCase();
 
                     for(ShipDoc doc : activity.docList)
-                    {
                         if(doc.getTrxNo()
-                              .concat(doc.getTrxNo())
-                              .concat(doc.getBpName())
-                              .concat(doc.getSbeName().concat(doc.getSbeCode()))
-                              .concat(doc.getDriverName())
-                              .toLowerCase()
-                              .contains(constraint))
-                        {
+                                .concat(doc.getTrxNo())
+                                .concat(doc.getBpName())
+                                .concat(doc.getSbeName().concat(doc.getSbeCode()))
+                                .concat(doc.getDriverName())
+                                .toLowerCase()
+                                .contains(constraint))
                             filteredArrayData.add(doc);
-                        }
-                    }
 
                     results.count = filteredArrayData.size();
                     results.values = filteredArrayData;

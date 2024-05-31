@@ -43,18 +43,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import az.inci.bmslogistic.AppConfig;
 import az.inci.bmslogistic.R;
-import az.inci.bmslogistic.User;
+import az.inci.bmslogistic.model.User;
 import az.inci.bmslogistic.model.LoginRequest;
 
-public class MainActivity extends AppBaseActivity
-{
+public class MainActivity extends AppBaseActivity {
 
     String id;
     String password;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         enableStorageAccess();
@@ -64,67 +62,81 @@ public class MainActivity extends AppBaseActivity
     }
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
         loadConfig();
     }
 
-    private void loadConfig()
-    {
+    private void loadConfig() {
         serviceUrl = preferences.getString("service_url", "http://185.129.0.46:8022");
         connectionTimeout = Integer.parseInt(preferences.getString("connection_timeout", "5"));
         cameraScanning = preferences.getBoolean("camera_scanning", false);
     }
 
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.settings_menu, menu);
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+
+        MenuItem itemSearch = menu.findItem(R.id.check_doc_status);
+        itemSearch.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, CheckDocStatusActivity.class);
+            startActivity(intent);
+            return true;
+        });
+
+        MenuItem itemNotConfirmedDocList = menu.findItem(R.id.not_confirmed_doc_list);
+        itemNotConfirmedDocList.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, NotConfirmedDocListActivity.class);
+            startActivity(intent);
+            return true;
+        });
+
+        MenuItem itemWaitingDocList = menu.findItem(R.id.waiting_doc_list);
+        itemWaitingDocList.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, WaitingDocListActivity.class);
+            startActivity(intent);
+            return true;
+        });
+
         MenuItem itemSettings = menu.findItem(R.id.settings);
         itemSettings.setOnMenuItemClickListener(item1 ->
-                                                {
-                                                    startActivity(new Intent(MainActivity.this,
-                                                                             SettingsActivity.class));
-                                                    return true;
-                                                });
+        {
+            startActivity(new Intent(MainActivity.this,
+                    SettingsActivity.class));
+            return true;
+        });
 
         MenuItem itemUpdate = menu.findItem(R.id.update);
         itemUpdate.setOnMenuItemClickListener(item1 ->
-                                              {
-                                                  AlertDialog dialog = new AlertDialog.Builder(this)
-                                                          .setTitle(R.string.update_version)
-                                                          .setMessage(R.string.want_to_update)
-                                                          .setNegativeButton(R.string.yes,
-                                                                             (dialogInterface, i) -> checkForNewVersion())
-                                                          .setPositiveButton(R.string.no, null)
-                                                          .create();
+        {
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.update_version)
+                    .setMessage(R.string.want_to_update)
+                    .setNegativeButton(R.string.yes,
+                            (dialogInterface, i) -> checkForNewVersion())
+                    .setPositiveButton(R.string.no, null)
+                    .create();
 
-                                                  dialog.show();
-                                                  return true;
-                                              });
+            dialog.show();
+            return true;
+        });
         return true;
     }
 
-    protected void enableStorageAccess()
-    {
+    protected void enableStorageAccess() {
         String[] permissions;
-        if(SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        {
+        if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions = new String[]{
                     READ_MEDIA_AUDIO,
                     READ_MEDIA_IMAGES,
                     READ_MEDIA_VIDEO
             };
-        }
-        else
+        } else
             permissions = new String[]{WRITE_EXTERNAL_STORAGE};
-        if(!permissionsGranted(permissions))
-        {
+        if (!permissionsGranted(permissions)) {
             ActivityCompat.requestPermissions(this, permissions, 1);
             Intent intent;
-            if(SDK_INT >= Build.VERSION_CODES.R)
-            {
+            if (SDK_INT >= Build.VERSION_CODES.R) {
                 intent = new Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 Uri uri = Uri.fromParts("package", getPackageName(), null);
                 intent.setData(uri);
@@ -133,32 +145,27 @@ public class MainActivity extends AppBaseActivity
         }
     }
 
-    private boolean permissionsGranted(String[] permissions)
-    {
-        for(String permission : permissions)
-        {
-            if(ActivityCompat.checkSelfPermission(this, permission) == PERMISSION_DENIED)
+    private boolean permissionsGranted(String[] permissions) {
+        for (String permission : permissions) {
+            if (ActivityCompat.checkSelfPermission(this, permission) == PERMISSION_DENIED)
                 return false;
         }
 
         return true;
     }
 
-    public void openSending(View view)
-    {
+    public void openSending(View view) {
         showLoginDialog(AppConfig.SEND_MODE);
     }
 
-    public void openDelivery(View view)
-    {
+    public void openDelivery(View view) {
         showLoginDialog(AppConfig.DLV_MODE);
     }
 
-    private void showLoginDialog(int mode)
-    {
+    private void showLoginDialog(int mode) {
         this.mode = mode;
         View view = getLayoutInflater().inflate(R.layout.login_page,
-                                                findViewById(android.R.id.content), false);
+                findViewById(android.R.id.content), false);
 
         EditText idEdit = view.findViewById(R.id.id_edit);
         EditText passwordEdit = view.findViewById(R.id.password_edit);
@@ -180,14 +187,11 @@ public class MainActivity extends AppBaseActivity
                     id = idEdit.getText().toString().toUpperCase();
                     password = passwordEdit.getText().toString();
 
-                    if(id.isEmpty() || password.isEmpty())
-                    {
+                    if (id.isEmpty() || password.isEmpty()) {
                         showToastMessage(getString(R.string.username_or_password_not_entered));
                         showLoginDialog(mode);
                         playSound(SOUND_FAIL);
-                    }
-                    else
-                    {
+                    } else {
                         loginViaServer();
 
                         dialog.dismiss();
@@ -195,26 +199,21 @@ public class MainActivity extends AppBaseActivity
                 }).create();
 
         Objects.requireNonNull(loginDialog.getWindow())
-               .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         loginDialog.show();
     }
 
-    private void attemptLogin(User user)
-    {
-        if(!user.getPassword().equals(password))
-        {
+    private void attemptLogin(User user) {
+        if (!user.getPassword().equals(password)) {
             loginViaServer();
-        }
-        else
-        {
+        } else {
             preferences.edit().putString("last_login_id", id).apply();
             preferences.edit().putString("last_login_password", password).apply();
-            switch(mode)
-            {
+            switch (mode) {
                 case AppConfig.SEND_MODE:
                     View view = getLayoutInflater().inflate(R.layout.select_sending_mode_layout,
-                                                            findViewById(android.R.id.content),
-                                                            false);
+                            findViewById(android.R.id.content),
+                            false);
                     RadioButton singleButton = view.findViewById(R.id.single_mode);
                     RadioButton multipleButton = view.findViewById(R.id.multiple_mode);
 
@@ -223,14 +222,12 @@ public class MainActivity extends AppBaseActivity
                             .setTitle("Rejim seç")
                             .setPositiveButton("OK", (dialog, which) -> {
                                 Class<?> aClass = null;
-                                if(singleButton.isChecked())
+                                if (singleButton.isChecked())
                                     aClass = SendingActivity.class;
-                                else
-                                    if(multipleButton.isChecked())
-                                        aClass = SendingListActivity.class;
+                                else if (multipleButton.isChecked())
+                                    aClass = SendingListActivity.class;
 
-                                if(aClass != null)
-                                {
+                                if (aClass != null) {
                                     Intent intent = new Intent(MainActivity.this, aClass);
                                     startActivity(intent);
                                 }
@@ -245,96 +242,79 @@ public class MainActivity extends AppBaseActivity
         }
     }
 
-    private void loginViaServer()
-    {
+    private void loginViaServer() {
         showProgressDialog(true);
         new Thread(() ->
-                   {
-                       String url = url("user", "login");
-                       LoginRequest request = new LoginRequest();
-                       request.setUserId(id);
-                       request.setPassword(password);
-                       User user = getSimpleObject(url, "POST", request, User.class);
-                       if(user != null)
-                       {
-                           runOnUiThread(() -> {
-                               user.setId(user.getId().toUpperCase());
-                               loadUserInfo(user, true);
-                               attemptLogin(user);
-                           });
-                       }
-                   }).start();
-    }
-
-    private void checkForNewVersion()
-    {
-        showProgressDialog(true);
-        new Thread(() ->
-                   {
-                       String url = url("download");
-                       Map<String, String> parameters = new HashMap<>();
-                       parameters.put("file-name", "BMSLogistic");
-                       url = addRequestParameters(url, parameters);
-                       try
-                       {
-                           String bytes = getSimpleObject(url, "GET", null, String.class);
-                           if(bytes != null)
-                           {
-                               byte[] fileBytes = android.util.Base64.decode(bytes, Base64.DEFAULT);
-                               runOnUiThread(() -> {
-                                   showProgressDialog(false);
-                                   updateVersion(fileBytes);
-                               });
-                           }
-                       }
-                       catch(RuntimeException e)
-                       {
-                           runOnUiThread(
-                                   () -> showMessageDialog(getString(R.string.error), e.toString(),
-                                                           ic_dialog_alert));
-                       }
-                   }).start();
-
-    }
-
-    private void updateVersion(byte[] bytes)
-    {
-        if(bytes == null)
         {
+            String url = url("user", "login");
+            LoginRequest request = new LoginRequest();
+            request.setUserId(id);
+            request.setPassword(password);
+            User user = getSimpleObject(url, "POST", request, User.class);
+            if (user != null) {
+                runOnUiThread(() -> {
+                    user.setId(user.getId().toUpperCase());
+                    loadUserInfo(user, true);
+                    attemptLogin(user);
+                });
+            }
+        }).start();
+    }
+
+    private void checkForNewVersion() {
+        showProgressDialog(true);
+        new Thread(() ->
+        {
+            String url = url("download");
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("file-name", "BMSLogistic");
+            url = addRequestParameters(url, parameters);
+            try {
+                String bytes = getSimpleObject(url, "GET", null, String.class);
+                if (bytes != null) {
+                    byte[] fileBytes = android.util.Base64.decode(bytes, Base64.DEFAULT);
+                    runOnUiThread(() -> {
+                        showProgressDialog(false);
+                        updateVersion(fileBytes);
+                    });
+                }
+            } catch (RuntimeException e) {
+                runOnUiThread(
+                        () -> showMessageDialog(getString(R.string.error), e.toString(),
+                                ic_dialog_alert));
+            }
+        }).start();
+
+    }
+
+    private void updateVersion(byte[] bytes) {
+        if (bytes == null) {
             showMessageDialog(getString(R.string.info),
-                              getString(R.string.no_new_version),
-                              ic_dialog_info);
+                    getString(R.string.no_new_version),
+                    ic_dialog_info);
             return;
         }
         File file = new File(
                 Environment.getExternalStorageDirectory().getPath() + "/BMSLogistic.apk");
-        if(!file.exists())
-        {
-            try
-            {
+        if (!file.exists()) {
+            try {
                 boolean newFile = file.createNewFile();
-                if(!newFile)
-                {
+                if (!newFile) {
                     showMessageDialog(getString(R.string.info),
-                                      getString(R.string.error_occurred),
-                                      ic_dialog_info);
+                            getString(R.string.error_occurred),
+                            ic_dialog_info);
                     return;
                 }
-            }
-            catch(IOException e)
-            {
+            } catch (IOException e) {
                 showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
                 return;
             }
         }
 
 
-        try(FileOutputStream stream = new FileOutputStream(file))
-        {
+        try (FileOutputStream stream = new FileOutputStream(file)) {
             stream.write(bytes);
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
             return;
         }
@@ -342,42 +322,33 @@ public class MainActivity extends AppBaseActivity
         PackageManager pm = getPackageManager();
         PackageInfo info = pm.getPackageArchiveInfo(file.getAbsolutePath(), 0);
         int version;
-        try
-        {
+        try {
             version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-        }
-        catch(PackageManager.NameNotFoundException e)
-        {
+        } catch (PackageManager.NameNotFoundException e) {
             showMessageDialog(getString(R.string.error), e.toString(),
-                              ic_dialog_alert);
+                    ic_dialog_alert);
             return;
         }
-        if(file.length() > 0 && info != null && info.versionCode > version)
-        {
+        if (file.length() > 0 && info != null && info.versionCode > version) {
 
             Intent installIntent;
             Uri uri;
-            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
-            {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 installIntent = new Intent(Intent.ACTION_VIEW);
                 uri = Uri.fromFile(file);
                 installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 installIntent.setDataAndType(uri, "application/vnd.android.package-archive");
-            }
-            else
-            {
+            } else {
                 installIntent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                 uri = FileProvider.getUriForFile(this, "az.inci.bmslogistic.provider", file);
                 installIntent.setData(uri);
                 installIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             }
             startActivity(installIntent);
-        }
-        else
-        {
+        } else {
             showMessageDialog(getString(R.string.info),
-                              getString(R.string.no_new_version),
-                              ic_dialog_info);
+                    getString(R.string.no_new_version),
+                    ic_dialog_info);
         }
     }
 }

@@ -78,4 +78,9 @@
     <string name="scan_confirmation_code">Təsdiq kodunu oxut</string>
     <string name="target_code">Hədəf kodu</string>
     <string name="confirmation_code">Təsdiq kodu</string>
+    <string name="whs_code">Anbar kodu</string>
+    <string name="check_doc_status">Statusu yoxla</string>
+    <string name="not_confirmed_doc_list">Təsdiqlənməmiş sənədlər</string>
+    <string name="waiting_doc_list">Yüklənməmiş sənədlər</string>
+    <string name="switch_to"><![CDATA[Tək sənəd<=>Çoxlu sənəd]]></string>
 </resources>

@@ -214,7 +214,7 @@ public class SendingListActivity extends ScannerSupportActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.sending_activity_menu, menu);
         MenuItem switchTo = menu.findItem(R.id.switch_to);
         switchTo.setOnMenuItemClickListener(menuItem -> {
             Intent intent = new Intent(this, SendingActivity.class);

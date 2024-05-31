@@ -4,7 +4,10 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -41,8 +44,28 @@ public class CheckDocStatusActivity extends ScannerSupportActivity
 
         scanCam.setVisibility(cameraScanning ? VISIBLE : GONE);
         scanCam.setOnClickListener(v -> barcodeResultLauncher.launch(0));
+    }
 
-        loadFooter();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.check_activity_menu, menu);
+
+        MenuItem itemNotConfirmedDocList = menu.findItem(R.id.not_confirmed_doc_list);
+        itemNotConfirmedDocList.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, NotConfirmedDocListActivity.class);
+            startActivity(intent);
+            finish();
+            return true;
+        });
+
+        MenuItem itemWaitingDocList = menu.findItem(R.id.waiting_doc_list);
+        itemWaitingDocList.setOnMenuItemClickListener(menuItem -> {
+            Intent intent = new Intent(this, WaitingDocListActivity.class);
+            startActivity(intent);
+            finish();
+            return true;
+        });
+        return true;
     }
 
     @Override

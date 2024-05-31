@@ -1,5 +1,7 @@
 package az.inci.bmslogistic;
 
+import az.inci.bmslogistic.model.User;
+
 public class AppConfig
 {
     public static final int SEND_MODE = 0;
