@@ -12,6 +12,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
@@ -34,12 +35,13 @@ import com.google.android.gms.location.Priority;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import az.inci.bmslogistic.LocationService;
-import az.inci.bmslogistic.model.Point;
 import az.inci.bmslogistic.R;
 import az.inci.bmslogistic.model.ConfirmDeliveryRequest;
+import az.inci.bmslogistic.model.Point;
 import az.inci.bmslogistic.model.ShipDocInfo;
 import az.inci.bmslogistic.model.UpdateDocLocationRequest;
 
@@ -105,10 +107,11 @@ public class DeliveryActivity extends ScannerSupportActivity
 
                     try
                     {
-                        updateDocLocation(
-                                geocoder.getFromLocation(currentLatitude, currentLongitude, 1)
-                                        .get(0)
-                                        .getAddressLine(0));
+                        List<Address> addressList = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
+                        if(addressList != null && !addressList.isEmpty())
+                            updateDocLocation(addressList.get(0).getAddressLine(0));
+                        else
+                            updateDocLocation(null);
                     }
                     catch(IOException e)
                     {
@@ -135,13 +138,13 @@ public class DeliveryActivity extends ScannerSupportActivity
         });
 
         confirm.setOnClickListener(view -> {
-            if (isEmpty(deliverPersonEdit.getText()))
+            if (isEmpty(deliverPersonEdit.getText().toString()))
             {
                 showMessageDialog(getString(R.string.info),
                         "Təhvil alan şəxs qeyd edilməyib!",
                         ic_dialog_alert);
             }
-            else if (isEmpty(confirmationCodeEdit.getText()))
+            else if (isEmpty(confirmationCodeEdit.getText().toString()))
             {
                 showMessageDialog(getString(R.string.info),
                         "Təsdiq kodu qeyd edilməyib!",
@@ -208,12 +211,12 @@ public class DeliveryActivity extends ScannerSupportActivity
     {
         if (isEmpty(trxNo))
         {
-            trxNo = barcode;
-            getShipDetails(barcode);
+            trxNo = barcode.trim();
+            getShipDetails(trxNo);
         }
         else
         {
-            confirmationCodeEdit.setText(barcode);
+            confirmationCodeEdit.setText(barcode.trim());
         }
     }
 

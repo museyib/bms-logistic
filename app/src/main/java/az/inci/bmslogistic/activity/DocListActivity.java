@@ -134,7 +134,7 @@ public class DocListActivity extends AppBaseActivity implements SearchView.OnQue
             parameters.put("start-date", startDate);
             parameters.put("end-date", endDate);
             url = addRequestParameters(url, parameters);
-            docList = getListData(url, ShipDoc[].class);
+            docList = getListData(url, "GET", null, ShipDoc[].class);
             if(docList != null) runOnUiThread(this::publishResult);
         }).start();
     }

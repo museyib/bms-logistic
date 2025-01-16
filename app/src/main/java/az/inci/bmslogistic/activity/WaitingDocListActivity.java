@@ -96,7 +96,7 @@ public class WaitingDocListActivity extends ScannerSupportActivity {
             Map<String, String> parameters = new HashMap<>();
             parameters.put("driver-code", driverCode);
             url = addRequestParameters(url, parameters);
-            docList = getListData(url, WaitingDocToShip[].class);
+            docList = getListData(url, "GET", null, WaitingDocToShip[].class);
             if(docList != null) runOnUiThread(this::publishResult);
         }).start();
     }

@@ -82,10 +82,7 @@ public class LocationService extends Service
             List<Address> addressList = geocoder.getFromLocation(lat, apt, 1);
             address = addressList.get(0).getAddressLine(0);
         }
-        catch(IOException e)
-        {
-            e.printStackTrace();
-        }
+        catch(IOException ignored) {}
         String url = url("logistics", "update-location");
 
         UpdateDocLocationRequest request = new UpdateDocLocationRequest();
@@ -102,9 +99,8 @@ public class LocationService extends Service
         OkHttpClient httpClient = new OkHttpClient.Builder().connectTimeout(
                 connectionTimeout, TimeUnit.SECONDS).build();
 
-        RequestBody requestBody = RequestBody.create(new Gson().toJson(requestBodyData),
-                                                     MediaType.get(
-                                                             "application/json;charset=UTF-8"));
+        RequestBody requestBody = RequestBody.create(MediaType.get("application/json;charset=UTF-8"),
+                new Gson().toJson(requestBodyData));
         Request request = new Request.Builder().method("POST", requestBody).url(url).build();
 
         return httpClient.newCall(request).execute();

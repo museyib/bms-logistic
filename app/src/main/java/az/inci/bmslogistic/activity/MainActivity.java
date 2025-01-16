@@ -9,12 +9,12 @@ import static android.R.drawable.ic_dialog_info;
 import static android.content.pm.PackageManager.PERMISSION_DENIED;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+import static az.inci.bmslogistic.GlobalParameters.apiVersion;
 import static az.inci.bmslogistic.GlobalParameters.cameraScanning;
 import static az.inci.bmslogistic.GlobalParameters.connectionTimeout;
 import static az.inci.bmslogistic.GlobalParameters.serviceUrl;
 
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import az.inci.bmslogistic.AppConfig;
@@ -68,9 +69,20 @@ public class MainActivity extends AppBaseActivity {
     }
 
     private void loadConfig() {
+
+        Properties properties = new Properties();
+        try
+        {
+            properties.load(getAssets().open("app.properties"));
+        }
+        catch(IOException e)
+        {
+            apiVersion = "v4";
+        }
         serviceUrl = preferences.getString("service_url", "http://185.129.0.46:8022");
         connectionTimeout = Integer.parseInt(preferences.getString("connection_timeout", "5"));
         cameraScanning = preferences.getBoolean("camera_scanning", false);
+        apiVersion = properties.getProperty("app.api-version");
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -204,41 +216,37 @@ public class MainActivity extends AppBaseActivity {
     }
 
     private void attemptLogin(User user) {
-        if (!user.getPassword().equals(password)) {
-            loginViaServer();
-        } else {
-            preferences.edit().putString("last_login_id", id).apply();
-            preferences.edit().putString("last_login_password", password).apply();
-            switch (mode) {
-                case AppConfig.SEND_MODE:
-                    View view = getLayoutInflater().inflate(R.layout.select_sending_mode_layout,
-                            findViewById(android.R.id.content),
-                            false);
-                    RadioButton singleButton = view.findViewById(R.id.single_mode);
-                    RadioButton multipleButton = view.findViewById(R.id.multiple_mode);
+        preferences.edit().putString("last_login_id", id).apply();
+        preferences.edit().putString("last_login_password", password).apply();
+        switch (mode) {
+            case AppConfig.SEND_MODE:
+                View view = getLayoutInflater().inflate(R.layout.select_sending_mode_layout,
+                        findViewById(android.R.id.content),
+                        false);
+                RadioButton singleButton = view.findViewById(R.id.single_mode);
+                RadioButton multipleButton = view.findViewById(R.id.multiple_mode);
 
-                    AlertDialog selectModeDialog = new AlertDialog.Builder(this)
-                            .setView(view)
-                            .setTitle("Rejim seç")
-                            .setPositiveButton("OK", (dialog, which) -> {
-                                Class<?> aClass = null;
-                                if (singleButton.isChecked())
-                                    aClass = SendingActivity.class;
-                                else if (multipleButton.isChecked())
-                                    aClass = SendingListActivity.class;
+                AlertDialog selectModeDialog = new AlertDialog.Builder(this)
+                        .setView(view)
+                        .setTitle("Rejim seç")
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            Class<?> aClass = null;
+                            if (singleButton.isChecked())
+                                aClass = SendingActivity.class;
+                            else if (multipleButton.isChecked())
+                                aClass = SendingListActivity.class;
 
-                                if (aClass != null) {
-                                    Intent intent = new Intent(MainActivity.this, aClass);
-                                    startActivity(intent);
-                                }
-                            }).create();
-                    selectModeDialog.show();
-                    break;
-                case AppConfig.DLV_MODE:
-                    Intent intent = new Intent(MainActivity.this, DeliveryActivity.class);
-                    startActivity(intent);
-                    break;
-            }
+                            if (aClass != null) {
+                                Intent intent = new Intent(MainActivity.this, aClass);
+                                startActivity(intent);
+                            }
+                        }).create();
+                selectModeDialog.show();
+                break;
+            case AppConfig.DLV_MODE:
+                Intent intent = new Intent(MainActivity.this, DeliveryActivity.class);
+                startActivity(intent);
+                break;
         }
     }
 
@@ -261,94 +269,113 @@ public class MainActivity extends AppBaseActivity {
         }).start();
     }
 
-    private void checkForNewVersion() {
+    private void checkForNewVersion()
+    {
         showProgressDialog(true);
-        new Thread(() ->
-        {
+
+        new Thread(() -> {
+            int version;
+            try
+            {
+                version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+            }
+            catch(PackageManager.NameNotFoundException e)
+            {
+                version = 0;
+            }
+            String url = url("app-version", "check");
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("app-name", "BMSLogistic");
+            parameters.put("current-version", String.valueOf(version));
+            url = addRequestParameters(url, parameters);
+            Boolean newVersionAvailable = getSimpleObject(url, "GET", null, Boolean.class);
+            if (newVersionAvailable != null)
+                runOnUiThread(() -> {
+                    if(newVersionAvailable)
+                        getApkFile();
+                    else
+                        showMessageDialog(getString(R.string.info), getString(R.string.no_new_version),
+                                ic_dialog_info);
+                });
+        }).start();
+    }
+
+    private void getApkFile()
+    {
+        showProgressDialog(true);
+        new Thread(() -> {
             String url = url("download");
             Map<String, String> parameters = new HashMap<>();
             parameters.put("file-name", "BMSLogistic");
             url = addRequestParameters(url, parameters);
-            try {
+            try
+            {
                 String bytes = getSimpleObject(url, "GET", null, String.class);
-                if (bytes != null) {
+                if(bytes != null)
+                {
                     byte[] fileBytes = android.util.Base64.decode(bytes, Base64.DEFAULT);
-                    runOnUiThread(() -> {
-                        showProgressDialog(false);
-                        updateVersion(fileBytes);
-                    });
+                    if (fileBytes != null)
+                        runOnUiThread(() -> installApp(fileBytes));
                 }
-            } catch (RuntimeException e) {
-                runOnUiThread(
-                        () -> showMessageDialog(getString(R.string.error), e.toString(),
-                                ic_dialog_alert));
+            }
+            catch(RuntimeException e)
+            {
+                runOnUiThread(() -> showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert));
             }
         }).start();
-
     }
 
-    private void updateVersion(byte[] bytes) {
-        if (bytes == null) {
-            showMessageDialog(getString(R.string.info),
-                    getString(R.string.no_new_version),
-                    ic_dialog_info);
-            return;
-        }
+    private void installApp(byte[] bytes)
+    {
         File file = new File(
                 Environment.getExternalStorageDirectory().getPath() + "/BMSLogistic.apk");
-        if (!file.exists()) {
-            try {
+        if(!file.exists())
+        {
+            try
+            {
                 boolean newFile = file.createNewFile();
-                if (!newFile) {
+                if(!newFile)
+                {
                     showMessageDialog(getString(R.string.info),
                             getString(R.string.error_occurred),
                             ic_dialog_info);
                     return;
                 }
-            } catch (IOException e) {
+            }
+            catch(IOException e)
+            {
                 showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
                 return;
             }
         }
 
-
-        try (FileOutputStream stream = new FileOutputStream(file)) {
+        try(FileOutputStream stream = new FileOutputStream(file))
+        {
             stream.write(bytes);
-        } catch (IOException e) {
+        }
+        catch(Exception e)
+        {
             showMessageDialog(getString(R.string.error), e.toString(), ic_dialog_alert);
             return;
         }
 
-        PackageManager pm = getPackageManager();
-        PackageInfo info = pm.getPackageArchiveInfo(file.getAbsolutePath(), 0);
-        int version;
-        try {
-            version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            showMessageDialog(getString(R.string.error), e.toString(),
-                    ic_dialog_alert);
-            return;
+        Intent installIntent;
+        Uri uri;
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+        {
+            installIntent = new Intent(Intent.ACTION_VIEW);
+            uri = Uri.fromFile(file);
+            installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            installIntent.setDataAndType(uri, "application/vnd.android.package-archive");
         }
-        if (file.length() > 0 && info != null && info.versionCode > version) {
-
-            Intent installIntent;
-            Uri uri;
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                installIntent = new Intent(Intent.ACTION_VIEW);
-                uri = Uri.fromFile(file);
-                installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                installIntent.setDataAndType(uri, "application/vnd.android.package-archive");
-            } else {
-                installIntent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-                uri = FileProvider.getUriForFile(this, "az.inci.bmslogistic.provider", file);
-                installIntent.setData(uri);
-                installIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
-            startActivity(installIntent);
-        } else {
-            showMessageDialog(getString(R.string.info),
-                    getString(R.string.no_new_version),
-                    ic_dialog_info);
+        else
+        {
+            installIntent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+            uri = FileProvider.getUriForFile(this, "az.inci.bmslogistic.provider",
+                    file);
+            installIntent.setData(uri);
+            installIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         }
+        startActivity(installIntent);
     }
 }

@@ -174,7 +174,7 @@ public class NotConfirmedDocListActivity extends ScannerSupportActivity implemen
             parameters.put("end-date", endDate);
             parameters.put("driver-code", driverCode);
             url = addRequestParameters(url, parameters);
-            docList = getListData(url, ShipDoc[].class);
+            docList = getListData(url, "GET", null, ShipDoc[].class);
             if(docList != null) runOnUiThread(this::publishResult);
         }).start();
     }

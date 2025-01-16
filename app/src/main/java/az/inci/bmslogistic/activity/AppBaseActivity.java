@@ -3,6 +3,7 @@ package az.inci.bmslogistic.activity;
 import static android.R.drawable.ic_dialog_alert;
 import static android.R.drawable.ic_dialog_info;
 import static android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION;
+import static az.inci.bmslogistic.GlobalParameters.apiVersion;
 import static az.inci.bmslogistic.GlobalParameters.connectionTimeout;
 import static az.inci.bmslogistic.GlobalParameters.jwt;
 import static az.inci.bmslogistic.GlobalParameters.serviceUrl;
@@ -13,6 +14,7 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -119,7 +121,7 @@ public class AppBaseActivity extends AppCompatActivity
     public String url(String... value)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(serviceUrl).append("/v3");
+        sb.append(serviceUrl).append("/").append(apiVersion);
         for(String s : value)
         {
             sb.append("/").append(s);
@@ -182,27 +184,28 @@ public class AppBaseActivity extends AppCompatActivity
     Response sendRequest(URL url, String method, @Nullable Object requestBodyData)
             throws IOException
     {
-        OkHttpClient httpClient = new OkHttpClient.Builder().connectTimeout(
-                connectionTimeout, TimeUnit.SECONDS).build();
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+        clientBuilder.connectTimeout(connectionTimeout, TimeUnit.SECONDS);
+        OkHttpClient httpClient = clientBuilder.build();
 
-        RequestBody requestBody = null;
+        Request request;
 
-        if(method.equals("POST"))
-        {
-            requestBody = RequestBody.create(new Gson().toJson(requestBodyData),
-                                             MediaType.get("application/json;charset=UTF-8"));
+        if(method.equals("POST")) {
+            RequestBody requestBody = RequestBody.create(MediaType.get("application/json;charset=UTF-8"),
+                    new Gson().toJson(requestBodyData));
+            request = new Request.Builder()
+                    .post(requestBody)
+                    .header("Authorization", "Bearer " + jwt)
+                    .url(url)
+                    .build();
         }
-
-        if(jwt.isEmpty())
-        {
-            jwt = jwtResolver.resolve();
-            preferences.edit().putString("jwt", jwt).apply();
+        else {
+            request = new Request.Builder()
+                    .get()
+                    .header("Authorization", "Bearer " + jwt)
+                    .url(url)
+                    .build();
         }
-
-        Request request = new Request.Builder().method(method, requestBody)
-                                               .header("Authorization", "Bearer " + jwt)
-                                               .url(url)
-                                               .build();
 
         return httpClient.newCall(request).execute();
     }
@@ -240,18 +243,18 @@ public class AppBaseActivity extends AppCompatActivity
                         iconId = ic_dialog_info;
                     }
                     else
-                        if(statusCode == 2)
-                        {
-                            title = getString(R.string.error);
-                            message = response.getDeveloperMessage();
-                            iconId = ic_dialog_alert;
-                        }
-                        else
-                        {
-                            title = getString(R.string.error);
-                            message = response.getDeveloperMessage() + ": " + response.getSystemMessage();
-                            iconId = ic_dialog_alert;
-                        }
+                    if(statusCode == 2)
+                    {
+                        title = getString(R.string.error);
+                        message = response.getDeveloperMessage();
+                        iconId = ic_dialog_alert;
+                    }
+                    else
+                    {
+                        title = getString(R.string.error);
+                        message = response.getDeveloperMessage() + ": " + response.getSystemMessage();
+                        iconId = ic_dialog_alert;
+                    }
                 }
                 else
                 {
@@ -267,8 +270,6 @@ public class AppBaseActivity extends AppCompatActivity
                 responseMessage.setBody(message);
                 responseMessage.setIconId(iconId);
 
-                httpResponse.close();
-
                 runOnUiThread(() -> executeComplete.executeComplete(responseMessage));
             }
             catch(IOException e)
@@ -280,14 +281,16 @@ public class AppBaseActivity extends AppCompatActivity
             }
             finally
             {
-                runOnUiThread(() -> showProgressDialog(false));
+                runOnUiThread(() -> {
+                    showProgressDialog(false);
+                });
             }
         }).start();
     }
 
-    protected <T> T getSimpleObject(String url, String method, Object request, Class<T> tClass)
+    public <T> T getSimpleObject(String url, String method, Object request, Class<T> tClass)
     {
-        T result = null;
+        Log.e("URL", url);
         try
         {
             Response httpResponse = sendRequest(new URL(url), method, request);
@@ -304,27 +307,29 @@ public class AppBaseActivity extends AppCompatActivity
                         Objects.requireNonNull(responseBody).string(),
                         responseType);
                 if(response.getStatusCode() == 0)
-                    result = gson.fromJson(gson.toJson(response.getData()), tClass);
+                    return gson.fromJson(gson.toJson(response.getData()), tClass);
                 else
-                    if(response.getStatusCode() == 2)
-                    {
-                        runOnUiThread(() -> {
-                            showMessageDialog(getString(R.string.error),
-                                              response.getDeveloperMessage(),
-                                              ic_dialog_alert);
-                            playSound(SOUND_FAIL);
-                        });
-                    }
-                    else
-                    {
-                        runOnUiThread(() -> {
-                            showMessageDialog(getString(R.string.error),
-                                              response.getDeveloperMessage() + ": " +
-                                              response.getSystemMessage(),
-                                              ic_dialog_alert);
-                            playSound(SOUND_FAIL);
-                        });
-                    }
+                if(response.getStatusCode() == 2)
+                {
+                    runOnUiThread(() -> {
+                        showMessageDialog(getString(R.string.error),
+                                response.getDeveloperMessage(),
+                                ic_dialog_alert);
+                        playSound(SOUND_FAIL);
+                    });
+                    return null;
+                }
+                else
+                {
+                    runOnUiThread(() -> {
+                        showMessageDialog(getString(R.string.error),
+                                response.getDeveloperMessage() + ": " +
+                                        response.getSystemMessage(),
+                                ic_dialog_alert);
+                        playSound(SOUND_FAIL);
+                    });
+                    return null;
+                }
             }
             else
             {
@@ -333,87 +338,15 @@ public class AppBaseActivity extends AppCompatActivity
                     showMessageDialog(getString(R.string.error), message, ic_dialog_alert);
                     playSound(SOUND_FAIL);
                 });
+                return null;
             }
-
-            httpResponse.close();
         }
         catch(IOException e)
         {
             runOnUiThread(() -> {
                 showMessageDialog(getString(R.string.error),
-                                  getString(R.string.internal_error) + ": " + e,
-                                  ic_dialog_alert);
-                playSound(SOUND_FAIL);
-            });
-        }
-        finally
-        {
-            runOnUiThread(() -> showProgressDialog(false));
-        }
-
-        return result;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    protected <T> List<T> getListData(String url, Class<T[]> tClass)
-    {
-        List<T> result = null;
-        try
-        {
-            Response httpResponse = sendRequest(new URL(url), "GET", null);
-            if(httpResponse.code() == 403)
-            {
-                jwt = jwtResolver.resolve();
-                preferences.edit().putString("jwt", jwt).apply();
-                httpResponse = sendRequest(new URL(url), "GET", null);
-            }
-            if(httpResponse.code() == 200)
-            {
-                ResponseBody responseBody = httpResponse.body();
-                CustomResponse response = gson.fromJson(
-                        Objects.requireNonNull(responseBody).string(),
-                        responseType);
-                if(response.getStatusCode() == 0)
-                    result = new ArrayList<>(
-                            Arrays.asList(gson.fromJson(gson.toJson(response.getData()), tClass)));
-                else
-                    if(response.getStatusCode() == 2)
-                    {
-                        runOnUiThread(() -> {
-                            showMessageDialog(getString(R.string.error),
-                                              response.getDeveloperMessage(),
-                                              ic_dialog_alert);
-                            playSound(SOUND_FAIL);
-                        });
-                    }
-                    else
-                    {
-                        runOnUiThread(() -> {
-                            showMessageDialog(getString(R.string.error),
-                                              response.getDeveloperMessage() + ": " +
-                                              response.getSystemMessage(),
-                                              ic_dialog_alert);
-                            playSound(SOUND_FAIL);
-                        });
-                    }
-            }
-            else
-            {
-                String message = httpResponse.toString();
-                runOnUiThread(() -> {
-                    showMessageDialog(getString(R.string.error), message, ic_dialog_alert);
-                    playSound(SOUND_FAIL);
-                });
-            }
-
-            httpResponse.close();
-        }
-        catch(Exception e)
-        {
-            runOnUiThread(() -> {
-                showMessageDialog(getString(R.string.error),
-                                  getString(R.string.internal_error) + ": " + e,
-                                  ic_dialog_alert);
+                        getString(R.string.internal_error) + ": " + e,
+                        ic_dialog_alert);
                 playSound(SOUND_FAIL);
             });
             return null;
@@ -422,7 +355,61 @@ public class AppBaseActivity extends AppCompatActivity
         {
             runOnUiThread(() -> showProgressDialog(false));
         }
+    }
 
-        return result;
+    @SuppressWarnings("SameParameterValue")
+    protected <T> List<T> getListData(String url, String method, Object request, Class<T[]> tClass) {
+        try {
+            Response httpResponse = sendRequest(new URL(url), method, request);
+            if (httpResponse.code() == 403) {
+                jwt = jwtResolver.resolve();
+                preferences.edit().putString("jwt", jwt).apply();
+                httpResponse = sendRequest(new URL(url), method, request);
+            }
+            if (httpResponse.code() == 200) {
+                ResponseBody responseBody = httpResponse.body();
+                CustomResponse response = gson.fromJson(
+                        Objects.requireNonNull(responseBody).string(),
+                        responseType);
+                if (response.getStatusCode() == 0)
+                    return new ArrayList<>(
+                            Arrays.asList(gson.fromJson(gson.toJson(response.getData()), tClass)));
+                else if (response.getStatusCode() == 2) {
+                    runOnUiThread(() -> {
+                        showMessageDialog(getString(R.string.error),
+                                response.getDeveloperMessage(),
+                                ic_dialog_alert);
+                        playSound(SOUND_FAIL);
+                    });
+                    return null;
+                } else {
+                    runOnUiThread(() -> {
+                        showMessageDialog(getString(R.string.error),
+                                response.getDeveloperMessage() + ": " +
+                                        response.getSystemMessage(),
+                                ic_dialog_alert);
+                        playSound(SOUND_FAIL);
+                    });
+                    return null;
+                }
+            } else {
+                String message = httpResponse.toString();
+                runOnUiThread(() -> {
+                    showMessageDialog(getString(R.string.error), message, ic_dialog_alert);
+                    playSound(SOUND_FAIL);
+                });
+                return null;
+            }
+        } catch (Exception e) {
+            runOnUiThread(() -> {
+                showMessageDialog(getString(R.string.error),
+                        getString(R.string.internal_error) + ": " + e,
+                        ic_dialog_alert);
+                playSound(SOUND_FAIL);
+            });
+            return null;
+        } finally {
+            runOnUiThread(() -> showProgressDialog(false));
+        }
     }
 }
