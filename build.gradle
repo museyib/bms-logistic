@@ -6,7 +6,7 @@ buildscript {
         maven { url "https://repo.spring.io/libs-milestone" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.5.1'
+        classpath 'com.android.tools.build:gradle:8.8.0'
     }
 }
 
@@ -19,5 +19,5 @@ allprojects {
 }
 
 tasks.register('clean', Delete) {
-    delete rootProject.buildDir
+    delete rootProject.layout.buildDirectory
 }
