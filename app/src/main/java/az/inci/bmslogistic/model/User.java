@@ -18,4 +18,5 @@ public class User
     private boolean packFlag;
     private boolean docFlag;
     private boolean loadingFlag;
+    private boolean archiveFlag;
 }

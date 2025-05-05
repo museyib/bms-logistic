@@ -27,7 +27,6 @@
                 android:layout_height="wrap_content"
                 android:drawableStart="@drawable/sending"
                 android:gravity="start|center_vertical"
-                android:onClick="openSending"
                 android:text="@string/sending"
                 android:textAllCaps="false"
                 android:textSize="18sp" />
@@ -38,10 +37,19 @@
                 android:layout_height="wrap_content"
                 android:drawableStart="@drawable/delivery"
                 android:gravity="start|center_vertical"
-                android:onClick="openDelivery"
                 android:text="@string/delivery"
                 android:textAllCaps="false"
                 android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/archive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/archive"
+            android:gravity="start|center_vertical"
+            android:text="@string/archiving"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

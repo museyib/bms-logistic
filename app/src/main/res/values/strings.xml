@@ -83,4 +83,6 @@
     <string name="not_confirmed_doc_list">Təsdiqlənməmiş sənədlər</string>
     <string name="waiting_doc_list">Yüklənməmiş sənədlər</string>
     <string name="switch_to"><![CDATA[Tək sənəd<=>Çoxlu sənəd]]></string>
+    <string name="archiving">Arxivləşdirmə</string>
+    <string name="archive">Arxivləşdir</string>
 </resources>

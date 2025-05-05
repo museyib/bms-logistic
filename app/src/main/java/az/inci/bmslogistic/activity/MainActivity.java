@@ -25,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -60,6 +61,13 @@ public class MainActivity extends AppBaseActivity {
 
         id = preferences.getString("last_login_id", "");
         password = preferences.getString("last_login_password", "");
+        Button sendButton = findViewById(R.id.sending);
+        Button deliveryButton = findViewById(R.id.delivery);
+        Button archiveButton = findViewById(R.id.archive);
+
+        sendButton.setOnClickListener(v -> openSending());
+        deliveryButton.setOnClickListener(v -> openDelivery());
+        archiveButton.setOnClickListener(v -> openArchive());
     }
 
     @Override
@@ -69,14 +77,11 @@ public class MainActivity extends AppBaseActivity {
     }
 
     private void loadConfig() {
-
         Properties properties = new Properties();
-        try
-        {
+        try {
             properties.load(getAssets().open("app.properties"));
         }
-        catch(IOException e)
-        {
+        catch(IOException e) {
             apiVersion = "v4";
         }
         serviceUrl = preferences.getString("service_url", "http://185.129.0.46:8022");
@@ -166,12 +171,16 @@ public class MainActivity extends AppBaseActivity {
         return true;
     }
 
-    public void openSending(View view) {
+    public void openSending() {
         showLoginDialog(AppConfig.SEND_MODE);
     }
 
-    public void openDelivery(View view) {
-        showLoginDialog(AppConfig.DLV_MODE);
+    public void openDelivery() {
+        showLoginDialog(AppConfig.DELIVERY_MODE);
+    }
+
+    public void openArchive() {
+        showLoginDialog(AppConfig.ARCHIVE_MODE);
     }
 
     private void showLoginDialog(int mode) {
@@ -243,9 +252,17 @@ public class MainActivity extends AppBaseActivity {
                         }).create();
                 selectModeDialog.show();
                 break;
-            case AppConfig.DLV_MODE:
-                Intent intent = new Intent(MainActivity.this, DeliveryActivity.class);
-                startActivity(intent);
+            case AppConfig.DELIVERY_MODE:
+                Intent deliveryIntent = new Intent(MainActivity.this, DeliveryActivity.class);
+                startActivity(deliveryIntent);
+                break;
+            case AppConfig.ARCHIVE_MODE:
+                if (user.isArchiveFlag()) {
+                    Intent archiveIntent = new Intent(MainActivity.this, ArchiveActivity.class);
+                    startActivity(archiveIntent);
+                }
+                else
+                    showMessageDialog(getString(R.string.error), getString(R.string.not_allowed), ic_dialog_alert);
                 break;
         }
     }
